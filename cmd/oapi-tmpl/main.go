@@ -1,11 +1,10 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"github.com/Masterminds/sprig/v3"
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/xuri/excelize/v2"
+    "github.com/pb33f/libopenapi"
 	"io"
 	"log"
 	"os"
@@ -20,21 +19,18 @@ func loadFormatFile(formatPath string) (*excelize.File, error) {
 	}
 }
 
-func loadOpenAPISchema(oapiPath string) (*openapi3.T, error) {
+func loadOpenAPISchema(oapiPath string) (*libopenapi.Document, error) {
 
-	loader := openapi3.NewLoader()
-	doc, err := loader.LoadFromFile(oapiPath)
+    oapiBytes, err := os.ReadFile(oapiPath)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	err = doc.Validate(ctx)
+    doc, err := libopenapi.NewDocument(oapiBytes)
 	if err != nil {
 		return nil, err
 	}
-
-	return doc, nil
+    return &doc, nil
 }
 
 /*
