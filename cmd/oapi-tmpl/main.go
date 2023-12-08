@@ -4,8 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Masterminds/sprig/v3"
+	"github.com/dop251/goja"
+	"github.com/dop251/goja_nodejs/console"
+	"github.com/dop251/goja_nodejs/require"
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi-validator"
+	"github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/xuri/excelize/v2"
 	"io"
 	"log"
@@ -21,7 +25,7 @@ func loadFormatFile(formatPath string) (*excelize.File, error) {
 	}
 }
 
-func loadOpenAPISchema(oapiPath string) (*libopenapi.Document, error) {
+func loadOpenAPISchema(oapiPath string) (*libopenapi.DocumentModel[v3.Document], error) {
 
 	oapiBytes, err := os.ReadFile(oapiPath)
 	if err != nil {
@@ -53,7 +57,9 @@ func loadOpenAPISchema(oapiPath string) (*libopenapi.Document, error) {
 		}
 	}
 
-	return &doc, nil
+	v3Model, _ := doc.BuildV3Model()
+
+	return v3Model, nil
 }
 
 /*
@@ -74,8 +80,10 @@ type Format struct {
 }
 
 func (f *Format) Set(sheet string, pos []interface{}, vals []interface{}) string {
+	log.Println(f.base)
 	for idx, p := range pos {
-		f.base.SetCellValue(sheet, p.(string), vals[idx])
+		err := f.base.SetCellValue(sheet, p.(string), vals[idx].(string))
+		log.Println(err)
 	}
 	return "a"
 }
@@ -84,7 +92,7 @@ func main() {
 
 	formatPath := flag.String("format", "", "output base file")
 	oapiPath := flag.String("oapi", "spec.yaml", "openapi spec yaml file")
-	templPath := flag.String("templ", "template.got", "go template file")
+	templPath := flag.String("templ", "template.js", "template file (javascript)")
 	flag.Parse()
 
 	baseFormat, err := loadFormatFile(*formatPath)
@@ -93,19 +101,31 @@ func main() {
 		log.Fatalln(err)
 	}
 	format := Format{base: baseFormat}
+	log.Println(baseFormat)
 
 	oapi, err := loadOpenAPISchema(*oapiPath)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	funcMap := sprig.FuncMap()
-	funcMap["set"] = format.Set
+	registry := new(require.Registry)
+	vm := goja.New()
+	registry.Enable(vm)
+	console.Enable(vm)
+
+	vm.Set("doc", oapi)
+	vm.Set("set", format.Set)
+	vm.Set("offset", Offset)
 
 	templBytes, err := os.ReadFile(*templPath)
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	vm.RunString(string(templBytes))
+
+	funcMap := sprig.FuncMap()
+	funcMap["set"] = format.Set
 
 	tmpl, err := template.New("").Funcs(funcMap).Parse(string(templBytes))
 	if err != nil {
