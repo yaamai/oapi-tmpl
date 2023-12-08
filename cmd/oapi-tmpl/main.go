@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/Masterminds/sprig/v3"
+	"github.com/pb33f/libopenapi"
+	"github.com/pb33f/libopenapi-validator"
 	"github.com/xuri/excelize/v2"
-    "github.com/pb33f/libopenapi"
 	"io"
 	"log"
 	"os"
@@ -21,16 +23,37 @@ func loadFormatFile(formatPath string) (*excelize.File, error) {
 
 func loadOpenAPISchema(oapiPath string) (*libopenapi.Document, error) {
 
-    oapiBytes, err := os.ReadFile(oapiPath)
+	oapiBytes, err := os.ReadFile(oapiPath)
 	if err != nil {
 		return nil, err
 	}
 
-    doc, err := libopenapi.NewDocument(oapiBytes)
+	doc, err := libopenapi.NewDocument(oapiBytes)
 	if err != nil {
 		return nil, err
 	}
-    return &doc, nil
+
+	docValidator, validatorErrs := validator.NewValidator(doc)
+
+	if validatorErrs != nil {
+		return nil, validatorErrs[0]
+	}
+
+	// 4. Validate!
+	valid, validationErrs := docValidator.ValidateDocument()
+
+	if !valid {
+		for _, e := range validationErrs {
+			// 5. Handle the error
+			fmt.Printf("Type: %s, Failure: %s\n", e.ValidationType, e.Message)
+			fmt.Printf("%d %d\n", e.SpecLine, e.SpecCol)
+			fmt.Printf("%v\n", e)
+			fmt.Printf("%v\n", e.SchemaValidationErrors)
+			fmt.Printf("Fix: %s\n\n", e.HowToFix)
+		}
+	}
+
+	return &doc, nil
 }
 
 /*
