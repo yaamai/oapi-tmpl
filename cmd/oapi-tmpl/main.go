@@ -80,10 +80,12 @@ type Format struct {
 }
 
 func (f *Format) Set(sheet string, pos []interface{}, vals []interface{}) string {
-	log.Println(f.base)
+	// log.Println(f.base)
 	for idx, p := range pos {
 		err := f.base.SetCellValue(sheet, p.(string), vals[idx].(string))
-		log.Println(err)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 	return "a"
 }
@@ -101,7 +103,7 @@ func main() {
 		log.Fatalln(err)
 	}
 	format := Format{base: baseFormat}
-	log.Println(baseFormat)
+	// log.Println(baseFormat)
 
 	oapi, err := loadOpenAPISchema(*oapiPath)
 	if err != nil {
