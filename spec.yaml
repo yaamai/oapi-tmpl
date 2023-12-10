@@ -96,6 +96,16 @@ components:
           type: string
         tag:
           type: string
+        hoge:
+          type: object
+          $ref: "#/components/schemas/Hoge"
+    Hoge:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
     Pets:
       type: object
       properties:

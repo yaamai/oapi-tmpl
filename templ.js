@@ -79,8 +79,12 @@ function makeInterfaceDescription(doc, pathname, method) {
 }
 
 function schemaToRows(schema, index, name, indent, required) {
+  console.log(name)
   if (schema.Type == "object") {
     var output = []
+    if (name) {
+      output.push([index, indent, name, schema.Type[0], false, required.includes(name), schema.Description])
+    }
     Object.keys(schema.Properties).forEach(function (propname, i) {
       rows = schemaToRows(schema.Properties[propname].Schema(), index+i, propname, indent+1, schema.Required)
       output = output.concat(rows)
