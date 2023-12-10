@@ -91,15 +91,18 @@ components:
         id:
           type: integer
           format: int64
+          description: "id of pet"
         name:
           type: string
         tag:
           type: string
     Pets:
-      type: array
-      maxItems: 100
-      items:
-        $ref: "#/components/schemas/Pet"
+      type: object
+      properties:
+        pets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Pet"
     Error:
       type: object
       required:

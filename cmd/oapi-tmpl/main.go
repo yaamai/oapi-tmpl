@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Masterminds/sprig/v3"
 	"github.com/dop251/goja"
 	"github.com/dop251/goja_nodejs/console"
 	"github.com/dop251/goja_nodejs/require"
@@ -11,10 +10,8 @@ import (
 	"github.com/pb33f/libopenapi-validator"
 	"github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/xuri/excelize/v2"
-	"io"
 	"log"
 	"os"
-	"text/template"
 )
 
 func loadFormatFile(formatPath string) (*excelize.File, error) {
@@ -62,19 +59,6 @@ func loadOpenAPISchema(oapiPath string) (*libopenapi.DocumentModel[v3.Document],
 	return v3Model, nil
 }
 
-/*
-func setupTemplate(formatPath, oapiPath, templPath string) {
-	funcMap := template.FuncMap{
-		"set": format.SetCellValue,
-	}
-	templBytes, err := os.ReadFile(*templPath)
-	tmpl, err := template.New("").Funcs(funcMap).Parse(string(templBytes))
-	if err != nil {
-		log.Fatalf("parsing: %s", err)
-	}
-}
-*/
-
 type Format struct {
 	base *excelize.File
 }
@@ -117,60 +101,43 @@ func main() {
 
 	vm.Set("doc", oapi)
 	vm.Set("set", format.Set)
-	vm.Set("offset", Offset)
+	vm.Set("offsets", Offset)
 
 	templBytes, err := os.ReadFile(*templPath)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	vm.RunString(string(templBytes))
-
-	funcMap := sprig.FuncMap()
-	funcMap["set"] = format.Set
-
-	tmpl, err := template.New("").Funcs(funcMap).Parse(string(templBytes))
-	if err != nil {
-		log.Fatalf("parsing: %s", err)
-	}
-
-	err = tmpl.Execute(io.Discard, oapi)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	err = tmpl.Execute(os.Stdout, oapi)
+	_, err = vm.RunString(string(templBytes))
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	format.base.SaveAs("out.xlsx")
-
-	// log.Println(doc.Components.Schemas["ExampleObject"].Value.Properties)
 }
 
-func Offset(coords []string, axis int, offset int) ([]string, error) {
+func Offset(coords []string, axis int, offset int) []string {
 	var result []string
 	for _, coord := range coords {
 		col, row, err := excelize.CellNameToCoordinates(coord)
 		if err != nil {
-			return nil, err
+			return nil
 		}
 
 		if axis == 0 {
 			coord, err := excelize.CoordinatesToCellName(col+offset, row)
 			if err != nil {
-				return nil, err
+				return nil
 			}
 			result = append(result, coord)
 		} else {
 			coord, err := excelize.CoordinatesToCellName(col, row+offset)
 			if err != nil {
-				return nil, err
+				return nil
 			}
 			result = append(result, coord)
 		}
 	}
 
-	return result, nil
+	return result
 }
