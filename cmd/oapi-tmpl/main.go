@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/dop251/goja"
@@ -90,6 +91,21 @@ func main() {
 	vm.Set("CellNameToCoordinates", excelize.CellNameToCoordinates)
 	vm.Set("CoordinatesToCellName", excelize.CoordinatesToCellName)
 	vm.Set("CellNameToCoordinates", excelize.CellNameToCoordinates)
+	vm.Set("NewStyle", func(book *excelize.File, alignment map[string]interface{}) (int, error) {
+		bytes, err := json.Marshal(alignment)
+		if err != nil {
+			return 0, err
+		}
+
+		align := &excelize.Alignment{}
+		err = json.Unmarshal(bytes, align)
+		if err != nil {
+			return 0, err
+		}
+
+		style := &excelize.Style{Alignment: align}
+		return book.NewStyle(style)
+	})
 
 	templBytes, err := os.ReadFile(*templPath)
 	if err != nil {

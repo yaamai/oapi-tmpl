@@ -1,5 +1,6 @@
 const methods = ["Get", "Post", "Delete", "Patch", "Put"]
 
+// set cell values
 function sets(book, sheet, coords, vals) {
   coords.forEach((c, idx) => {
     const err = book.SetCellValue(sheet, c, vals[idx])
@@ -9,6 +10,7 @@ function sets(book, sheet, coords, vals) {
   })
 }
 
+// calc cell address by offset
 function offsets(coords, axis, offset) {
   return coords.map((c) => {
     var err, col, row, coord
@@ -20,6 +22,12 @@ function offsets(coords, axis, offset) {
 			return CoordinatesToCellName(col, row+offset)
     }
   })
+}
+
+// set cell indent
+function indent(book, sheet, coord, level) {
+  style = NewStyle(book, {Indent: level})
+  book.SetCellStyle(sheet, coord, coord, style)
 }
 
 // output interface list
@@ -59,15 +67,15 @@ function makeInterfaceList(doc) {
 // object in object({{}}): support
 // currently only 200 response and json data are supported
 function makeInterfaceDescription(doc, pathname, method) {
-  if (!doc.Model.Paths.PathItems[pathname]) return
-  if (!doc.Model.Paths.PathItems[pathname][method]) return
+  if (!doc.Model.Paths.PathItems[pathname]) return []
+  if (!doc.Model.Paths.PathItems[pathname][method]) return []
 
   const operation = doc.Model.Paths.PathItems[pathname][method];
-  if (!operation.Responses.Codes[200]) return
-  if (!operation.Responses.Codes[200].Content["application/json"]) return
+  if (!operation.Responses.Codes[200]) return []
+  if (!operation.Responses.Codes[200].Content["application/json"]) return []
 
   const schema = operation.Responses.Codes[200].Content["application/json"].Schema.Schema()
-  return schemaToRows(schema, 1, "", 0, [])
+  return schemaToRows(schema, 1, "", -1, [])
 }
 
 function schemaToRows(schema, index, name, indent, required) {
@@ -90,15 +98,28 @@ function schemaToRows(schema, index, name, indent, required) {
 }
 
 function main(doc, book) {
-  var pos = ["B4", "C4", "D4", "E4", "F4", "G4"]
-  var offset = 1
 
   makeInterfaceList(doc).forEach((vals) => {
+    // output interface list
+    var pos = ["B4", "C4", "D4", "E4", "F4", "G4"]
     sets(book, "List", pos, vals)
     pos = offsets(pos, 1, 1)
 
-    var output = makeInterfaceDescription(doc, vals[2], vals[4])
-    console.log(JSON.stringify(output))
+    // create interface response sheet
+    templateSheetName = "Template"
+    sheetName = "Resp("+vals[1]+")"
+
+    destIndex = book.NewSheet(sheetName)
+    sourceIndex = book.GetSheetIndex(templateSheetName)
+    book.CopySheet(sourceIndex, destIndex)
+
+    // output interface detail
+    var pos = ["B4", "C4", "D4", "E4", "F4"]
+    makeInterfaceDescription(doc, vals[2], vals[4]).forEach((vals) => {
+      sets(book, sheetName, pos, [vals[0], vals[2], vals[4], vals[5], vals[6]])
+      indent(book, sheetName, pos[1], vals[1])
+      pos = offsets(pos, 1, 1)
+    })
   })
 
 }
