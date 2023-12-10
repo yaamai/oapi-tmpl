@@ -75,29 +75,29 @@ function makeInterfaceDescription(doc, pathname, method) {
   if (!operation.Responses.Codes[200].Content["application/json"]) return []
 
   const schema = operation.Responses.Codes[200].Content["application/json"].Schema.Schema()
-  return schemaToRows(schema, 1, "", -1, [])
+  return schemaToRows(schema, "", -1, [])
 }
 
-function schemaToRows(schema, index, name, indent, required) {
+function schemaToRows(schema, name, indent, required) {
   console.log(name)
   if (schema.Type == "object") {
     var output = []
     if (name) {
-      output.push([index, indent, name, schema.Type[0], false, required.includes(name), schema.Description])
+      output.push([indent, name, schema.Type[0], false, required.includes(name), schema.Description])
     }
     Object.keys(schema.Properties).forEach(function (propname, i) {
-      rows = schemaToRows(schema.Properties[propname].Schema(), index+i, propname, indent+1, schema.Required)
+      rows = schemaToRows(schema.Properties[propname].Schema(), propname, indent+1, schema.Required)
       output = output.concat(rows)
     })
     return output
   } else if (schema.Type == "array") {
     var output = []
-    output.push([index, indent, name, schema.Type[0], true, required.includes(name), schema.Description])
-    var rows = schemaToRows(schema.Items.A.Schema(), index+1, "", indent, required)
+    output.push([indent, name, schema.Type[0], true, required.includes(name), schema.Description])
+    var rows = schemaToRows(schema.Items.A.Schema(), "", indent, required)
     output = output.concat(rows)
     return output
   } else {
-    return [[index, indent, name, schema.Type[0], false, required.includes(name), schema.Description]]
+    return [[indent, name, schema.Type[0], false, required.includes(name), schema.Description]]
   }
 }
 
@@ -119,9 +119,10 @@ function main(doc, book) {
 
     // output interface detail
     var pos = ["B4", "C4", "D4", "E4", "F4"]
-    makeInterfaceDescription(doc, vals[2], vals[4]).forEach((vals) => {
-      sets(book, sheetName, pos, [vals[0], vals[2], vals[4], vals[5], vals[6]])
-      indent(book, sheetName, pos[1], vals[1])
+    makeInterfaceDescription(doc, vals[2], vals[4]).forEach((vals, i) => {
+      console.log(JSON.stringify(vals))
+      sets(book, sheetName, pos, [i, vals[1], vals[3], vals[4], vals[5]])
+      indent(book, sheetName, pos[1], vals[0])
       pos = offsets(pos, 1, 1)
     })
   })
