@@ -29,6 +29,7 @@ func loadOpenAPISchema(oapiPath string) (*libopenapi.DocumentModel[v3.Document],
 	if err != nil {
 		return nil, []error{err}
 	}
+	log.Println(string(oapiBytes[:128]))
 
 	doc, err := libopenapi.NewDocument(oapiBytes)
 	if err != nil {
@@ -46,7 +47,10 @@ func loadOpenAPISchema(oapiPath string) (*libopenapi.DocumentModel[v3.Document],
 	if !valid {
 		var errs []error
 
+		log.Println(len(validationErrs))
 		for _, e := range validationErrs {
+            log.Println("%v", e)
+
 			for _, err := range e.SchemaValidationErrors {
 				errs = append(errs, err)
 			}
@@ -78,6 +82,7 @@ func main() {
 		for _, err := range errs {
 			fmt.Println(err)
 		}
+		log.Fatalln("")
 	}
 
 	registry := new(require.Registry)
@@ -91,7 +96,17 @@ func main() {
 	vm.Set("CellNameToCoordinates", excelize.CellNameToCoordinates)
 	vm.Set("CoordinatesToCellName", excelize.CoordinatesToCellName)
 	vm.Set("CellNameToCoordinates", excelize.CellNameToCoordinates)
-	vm.Set("NewStyle", func(book *excelize.File, alignment map[string]interface{}) (int, error) {
+	vm.Set("NewStyleFromCell", func(book *excelize.File, sheet string, coord string, alignment map[string]interface{}) (int, error) {
+		styleId, err := book.GetCellStyle(sheet, coord)
+		if err != nil {
+			return 0, err
+		}
+
+		style, err := book.GetStyle(styleId)
+		if err != nil {
+			return 0, err
+		}
+
 		bytes, err := json.Marshal(alignment)
 		if err != nil {
 			return 0, err
@@ -103,7 +118,7 @@ func main() {
 			return 0, err
 		}
 
-		style := &excelize.Style{Alignment: align}
+		style.Alignment = align
 		return book.NewStyle(style)
 	})
 
