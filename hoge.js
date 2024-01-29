@@ -24,6 +24,27 @@ function assert(a, b) {
 }
 
 function schemaToTable(schema, name) {
+  var r = {tables: {}, columns: {}}
+
+  // make enum string to master table
+  if (schema.Type == "string" && schema.Enum.length > 0) {
+    r.tables[name] = {id: {type: "number"}, value: {"type": "string"}}
+    return r
+  }
+
+  if (schema.Type == "object") {
+    Object.keys(schema.Properties).forEach((prop) => {
+      var propSchema = schema.Properties[prop].Schema()
+      var t = schemaToTable(propSchema, prop)
+      assert(t, {})
+    })
+    return r
+  }
+
+  r.columns[name] = {type: schema.Type[0]}
+  return r
+}
+/*
   var result = {}
 
   if (schema.Type == "object") {
@@ -31,7 +52,6 @@ function schemaToTable(schema, name) {
     Object.keys(schema.Properties).forEach((prop) => {
       var propSchema = schema.Properties[prop].Schema()
 
-      // make enum string to master table
       if (propSchema.Type == "string" && propSchema.Enum.length > 0) {
         result[prop] = {id: {type: "number"}, value: {"type": "string"}}
         result[name][prop] = {type: "number", foreign: prop}
@@ -65,7 +85,22 @@ function schemaToTable(schema, name) {
     })
     return result
   }
-}
+*/
+var a = jsonschema(`type: string`)
+var b = {"test": {"type": "string"}}
+assert(schemaToTable(a, "test"), b)
+
+var a = jsonschema(`type: number`)
+var b = {"test": {"type": "number"}}
+assert(schemaToTable(a, "test"), b)
+
+var a = jsonschema(`
+type: string
+enum:
+- a
+- b`)
+var b = {"test":{"id":{"type":"number"},"value":{"type":"string"}}}
+assert(schemaToTable(a, "test"), b)
 
 var a = jsonschema(`
 type: object
@@ -130,7 +165,7 @@ properties:
     type: object
 `)
 // test(id, aaa.id) aaa(id)
-// test(id) aaa(test.id)
+// test(id) aaa(test.id) == [{}, {}]
 var b = {"test":{"bbb":{"type":"number"},"aaa":{"type":"string"}}}
 assert(schemaToTable(a, "test"), b)
 
