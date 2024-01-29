@@ -1,5 +1,26 @@
+function deepCompare (arg1, arg2) {
+  if (Object.prototype.toString.call(arg1) === Object.prototype.toString.call(arg2)){
+    if (Object.prototype.toString.call(arg1) === '[object Object]' || Object.prototype.toString.call(arg1) === '[object Array]' ){
+      if (Object.keys(arg1).length !== Object.keys(arg2).length ){
+        return false;
+      }
+      return (Object.keys(arg1).every(function(key){
+        return deepCompare(arg1[key],arg2[key]);
+      }));
+    }
+    return (arg1===arg2);
+  }
+  return false;
+}
+
 function assert(a, b) {
-  JSON.stringify(a) === JSON.stringify(b)
+  if (deepCompare(a, b)) {
+    console.log("OK")
+  } else {
+    console.log("FAIL")
+    console.log(JSON.stringify(a))
+    console.log(JSON.stringify(b))
+  }
 }
 
 function schemaToTable(schema, name) {
@@ -45,7 +66,8 @@ properties:
   bbb:
     type: number
 `)
-console.log(JSON.stringify(schemaToTable(a, "test")))
+var b = {"test":{"bbb":{"type":"number"},"aaa":{"type":"string"}}}
+assert(schemaToTable(a, "test"), b)
 
 var a = jsonschema(`
 type: object
@@ -58,8 +80,8 @@ properties:
     - a
     - b
 `)
-
-console.log(JSON.stringify(schemaToTable(a, "test")))
+var b = {"test":{"bbb":{"type":"number","foreign":"bbb"},"aaa":{"type":"string"}},"bbb":{"id":{"type":"number"},"value":{"type":"string"}}}
+assert(schemaToTable(a, "test"), b)
 
 var a = jsonschema(`
 type: object
@@ -71,8 +93,10 @@ properties:
     items:
       type: string
 `)
+var b = {"test":{"aaa":{"type":"string"}},"test_bbb_assoc":{"id":{"type":"number","foreign":"test"},"value":{"type":"string"}}}
+assert(schemaToTable(a, "test"), b)
 
-console.log(JSON.stringify(schemaToTable(a, "test")))
+// 2024/01/30 00:59:34 {"test":{"aaa":{"type":"string"}},"test_bbb_assoc":{"ccc":{"type":"object"},"id":{"type":"number","foreign":"test"}}}
 
 var a = jsonschema(`
 type: object
@@ -87,9 +111,10 @@ properties:
         ccc:
           type: string
 `)
+var b = {"test":{"aaa":{"type":"string"}},"test_bbb_assoc":{"ccc":{"type":"string"},"id":{"type":"number","foreign":"test"}}}
+assert(schemaToTable(a, "test"), b)
 
-console.log(JSON.stringify(schemaToTable(a, "test")))
-
+/*
 var a = jsonschema(`
 type: object
 properties:
@@ -106,5 +131,7 @@ properties:
             ddd:
               type: number
 `)
-
-console.log(JSON.stringify(schemaToTable(a, "test")))
+// {aaa: "", bbb: [{ccc: {ddd: 123}}]}
+var b = {"test":{"aaa":{"type":"string"}},"test_bbb_assoc":{"ccc":{"type":"string"},"id":{"type":"number","foreign":"test"}}}
+assert(schemaToTable(a, "test"), b)
+*/
