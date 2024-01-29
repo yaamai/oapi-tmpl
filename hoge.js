@@ -25,37 +25,46 @@ function assert(a, b) {
 
 function schemaToTable(schema, name) {
   var result = {}
-  result[name] = {}
-  Object.keys(schema.Properties).forEach((prop) => {
-    var propSchema = schema.Properties[prop].Schema()
 
-    // make enum string to master table
-    if (propSchema.Enum.length > 0) {
-      result[prop] = {id: {type: "number"}, value: {"type": "string"}}
-      result[name][prop] = {type: "number", foreign: prop}
-      return
-    }
+  if (schema.Type == "object") {
+    result[name] = {}
+    Object.keys(schema.Properties).forEach((prop) => {
+      var propSchema = schema.Properties[prop].Schema()
 
-    // make 1:N association
-    if (propSchema.Type == "array") {
-      const subPropSchema = propSchema.Items.A.Schema()
-
-      // non-nested type are represented in simple association table
-      var assocTableName = name+"_"+prop+"_assoc"
-      if (subPropSchema.Type == "string" || subPropSchema.Type == "number") {
-        result[assocTableName] = {id: {type: "number", foreign: name}, value: {"type": "string"}}
-      } else {
-        var table = schemaToTable(subPropSchema, assocTableName)
-        table[assocTableName]["id"] = {type: "number", foreign: name}
-        result[assocTableName] = table[assocTableName]
+      // make enum string to master table
+      if (propSchema.Type == "string" && propSchema.Enum.length > 0) {
+        result[prop] = {id: {type: "number"}, value: {"type": "string"}}
+        result[name][prop] = {type: "number", foreign: prop}
+        return
       }
-      return
-    }
 
-    // otherwise normal column
-    result[name][prop] = {type: propSchema.Type[0]}
-  })
-  return result
+      // make 1:N association
+      if (propSchema.Type == "array") {
+        const subPropSchema = propSchema.Items.A.Schema()
+
+        // non-nested type are represented in simple association table
+        var assocTableName = name+"_"+prop+"_assoc"
+        if (subPropSchema.Type == "string" || subPropSchema.Type == "number") {
+          result[assocTableName] = {id: {type: "number", foreign: name}, value: {"type": "string"}}
+        } else {
+          var table = schemaToTable(subPropSchema, assocTableName)
+          table[assocTableName]["id"] = {type: "number", foreign: name}
+          result[assocTableName] = table[assocTableName]
+        }
+        return
+      }
+
+      // convert object in object to 1:1 relation
+      if (propSchema.Type == "object") {
+        console.log(Object.keys(schema.Properties), name, prop)
+        return
+      }
+
+      // otherwise normal column
+      result[name][prop] = {type: propSchema.Type[0]}
+    })
+    return result
+  }
 }
 
 var a = jsonschema(`
@@ -114,7 +123,17 @@ properties:
 var b = {"test":{"aaa":{"type":"string"}},"test_bbb_assoc":{"ccc":{"type":"string"},"id":{"type":"number","foreign":"test"}}}
 assert(schemaToTable(a, "test"), b)
 
-/*
+var a = jsonschema(`
+type: object
+properties:
+  aaa:
+    type: object
+`)
+// test(id, aaa.id) aaa(id)
+// test(id) aaa(test.id)
+var b = {"test":{"bbb":{"type":"number"},"aaa":{"type":"string"}}}
+assert(schemaToTable(a, "test"), b)
+
 var a = jsonschema(`
 type: object
 properties:
@@ -134,4 +153,3 @@ properties:
 // {aaa: "", bbb: [{ccc: {ddd: 123}}]}
 var b = {"test":{"aaa":{"type":"string"}},"test_bbb_assoc":{"ccc":{"type":"string"},"id":{"type":"number","foreign":"test"}}}
 assert(schemaToTable(a, "test"), b)
-*/
