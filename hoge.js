@@ -15,23 +15,102 @@ function deepCompare (arg1, arg2) {
 
 function assert(m, a, b) {
   if (deepCompare(a, b)) {
-    console.log(m.padEnd(32) + ": OK")
+    console.log("TEST: " + m.padEnd(32) + ": OK")
   } else {
-    console.log(m.padEnd(32) + ": FAIL")
+    console.log("TEST: " + m.padEnd(32) + ": FAIL")
     console.log(JSON.stringify(a))
     console.log(JSON.stringify(b))
   }
 }
 /*
 1. object
+   ```
+   test:
+     a: 1
+     b: "aaa"
+   ```
+   ```
+   test(a int, b text)
+   ```
 2. object in object
+   ```
+   test:
+     a: 1
+     hoge:
+       b: "aaa"
+   ```
+   ```
+   test(a int, hoge_id int foreign key(hoge.id))
+   hoge(id int, b text)
+   ```
 3. object in array
+   ```
+   Hoge:
+     type: array
+     items:
+       type: object
+       properties:
+         a:
+           type: number
+         b:
+           type: string
+   ```
+   ```
+   - a: 1
+     b: "aaa"
+   - a: 2
+     b: "aaa"
+   ```
+   ```
+   XXXX(id int, a int, b text)
+   ASSOC(id int, XXXX_id int foreign key(XXXX.id))
+   ```
+   - [ ] can't determine object name (==table name)
 
 4. array
+   ```
+   - 1
+   - 2
+   ```
+   ```
+   XXXX(YYYY int)
+   ```
+   - [ ] can't determine object name (==table name)
+   - [ ] can't determine column name
+
 5. array in object
+   ```
+   hoge:
+   - 1
+   - 2
+   ```
+   ```
+   hoge(id int)
+   hoge_assoc(hoge_id int, YYYY int)
+   ```
+
 6. array in array
+   ```
+   - - 1
+     - 2
+   - - 1
+     - 2
+   ```
+   ```
+   XXXX(YYYY_id int, ZZZZ int)
+   AAAA(BBBB_id int, XXXX_id int foreign key(XXXX.id))
+   ```
+   - [ ] can't determine object name (==table name)
+   - [ ] can't determine column name
 
 7. enum+string
+   ```
+   "aaa"
+   ```
+   ```
+   test(id int, value text)
+   ```
+
 8. enum+string in object
 9. enum+string in array
 
@@ -159,6 +238,13 @@ function _schemaToTable(ctx, schema, name, parent) {
     return result
   }
 */
+var a = jsonschema(`
+Hoge:
+  type: string
+`)
+var b = {}
+assert("string", a, b)
+
 var a = jsonschema(`type: string`)
 var b = {}
 assert("string", schemaToTable(a, "test"), b)
