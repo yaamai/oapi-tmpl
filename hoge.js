@@ -43,17 +43,64 @@ enum+string   7       8      9
 */
 
 function schemaToTable(schema, name) {
-  return _schemaToTable(schema, name).t
+  var ctx = {tables: {}}
+  _schemaToTable(ctx, schema, name)
+  return ctx.tables
 }
 
-function _schemaToTable(schema, name) {
-  var result = {t: {}, c: {}}
+function _addColumn(ctx, name, parent, decl) {
+  if (parent) {
+    if (!ctx.tables[parent]) {
+      ctx.tables[parent] = {}
+    }
+    ctx.tables[parent][name] = decl
+  }
+}
+
+function _schemaToTable(ctx, schema, name, parent) {
+  console.log("NAME:", name, parent)
 
   // make enum string to master table
   if (schema.Type == "string" && schema.Enum.length > 0) {
-    result.t[name] = {id: {type: "number"}, value: {"type": "string"}}
-    return result
+    ctx.tables[name] = {id: {type: "number"}, value: {"type": "string"}}
+
+    // add relation column if ctx.cur(parent) exists
+    _addColumn(ctx, name, parent, {type: "number", foreign: name+".id"})
   }
+
+  // string without enum are normal column to parent
+  if (schema.Type == "string" && schema.Enum.length == 0) {
+    _addColumn(ctx, name, parent, {"type": "string"})
+  }
+
+  // number are normal column to parent
+  if (schema.Type == "number") {
+    _addColumn(ctx, name, parent, {"type": "number"})
+  }
+
+  // make table
+  if (schema.Type == "object") {
+    Object.keys(schema.Properties).forEach((prop) => {
+      var propSchema = schema.Properties[prop].Schema()
+      _schemaToTable(ctx, propSchema, prop, name)
+    })
+  }
+
+  // make 1:N association
+  if (schema.Type == "array") {
+    console.log("array")
+    // add parent and myself association table and column
+    const tablename = parent+"_"+name+"_assoc"
+    const foreignKeyName = parent+"_id"
+    ctx.tables[tablename] = {id: {type: "number"}, [foreignKeyName]: {type: "number", foreign: parent+".id"}}
+
+    var subSchema = schema.Items.A.Schema()
+    _schemaToTable(ctx, subSchema, name, tablename)
+  }
+}
+/*
+  var result = {t: {}, c: {}}
+
 
   if (schema.Type == "object") {
     Object.keys(schema.Properties).forEach((prop) => {
@@ -71,8 +118,6 @@ function _schemaToTable(schema, name) {
 
   result.c[name] = {type: schema.Type[0]}
   return result
-}
-/*
   var result = {}
 
   if (schema.Type == "object") {
@@ -152,7 +197,7 @@ properties:
     - a
     - b
 `)
-var b = {"test":{"bbb":{"type":"number","foreign":"bbb"},"aaa":{"type":"string"}},"bbb":{"id":{"type":"number"},"value":{"type":"string"}}}
+var b = {"bbb":{"id":{"type":"number"},"value":{"type":"string"}},"test":{"bbb":{"type":"number","foreign":"bbb.id"},"aaa":{"type":"string"}}}
 assert("enum string in object", schemaToTable(a, "test"), b)
 
 var a = jsonschema(`
@@ -166,7 +211,7 @@ properties:
       type: string
 `)
 var b = {"test":{"aaa":{"type":"string"}},"test_bbb_assoc":{"id":{"type":"number","foreign":"test"},"value":{"type":"string"}}}
-assert(schemaToTable(a, "test"), b)
+assert("array in object", schemaToTable(a, "test"), b)
 
 // 2024/01/30 00:59:34 {"test":{"aaa":{"type":"string"}},"test_bbb_assoc":{"ccc":{"type":"object"},"id":{"type":"number","foreign":"test"}}}
 
@@ -184,7 +229,7 @@ properties:
           type: string
 `)
 var b = {"test":{"aaa":{"type":"string"}},"test_bbb_assoc":{"ccc":{"type":"string"},"id":{"type":"number","foreign":"test"}}}
-assert(schemaToTable(a, "test"), b)
+assert("object in array in object", schemaToTable(a, "test"), b)
 
 var a = jsonschema(`
 type: object
