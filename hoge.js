@@ -13,36 +13,64 @@ function deepCompare (arg1, arg2) {
   return false;
 }
 
-function assert(a, b) {
+function assert(m, a, b) {
   if (deepCompare(a, b)) {
-    console.log("OK")
+    console.log(m.padEnd(32) + ": OK")
   } else {
-    console.log("FAIL")
+    console.log(m.padEnd(32) + ": FAIL")
     console.log(JSON.stringify(a))
     console.log(JSON.stringify(b))
   }
 }
+/*
+1. object
+2. object in object
+3. object in array
+
+4. array
+5. array in object
+6. array in array
+
+7. enum+string
+8. enum+string in object
+9. enum+string in array
+
+              -    object array
+object        1       2      3
+array         4       5      6
+enum+string   7       8      9
+
+*/
 
 function schemaToTable(schema, name) {
-  var r = {tables: {}, columns: {}}
+  return _schemaToTable(schema, name).t
+}
+
+function _schemaToTable(schema, name) {
+  var result = {t: {}, c: {}}
 
   // make enum string to master table
   if (schema.Type == "string" && schema.Enum.length > 0) {
-    r.tables[name] = {id: {type: "number"}, value: {"type": "string"}}
-    return r
+    result.t[name] = {id: {type: "number"}, value: {"type": "string"}}
+    return result
   }
 
   if (schema.Type == "object") {
     Object.keys(schema.Properties).forEach((prop) => {
       var propSchema = schema.Properties[prop].Schema()
-      var t = schemaToTable(propSchema, prop)
-      assert(t, {})
+      var t = _schemaToTable(propSchema, prop)
+
+      Object.assign(result.t, t.t)
+      Object.assign(result.c, t.c)
     })
-    return r
+
+    result.t[name] = result.c
+    result.c = {}
+    return result
   }
 
-  r.columns[name] = {type: schema.Type[0]}
-  return r
+  result.c[name] = {type: schema.Type[0]}
+  return result
 }
 /*
   var result = {}
@@ -87,12 +115,12 @@ function schemaToTable(schema, name) {
   }
 */
 var a = jsonschema(`type: string`)
-var b = {"test": {"type": "string"}}
-assert(schemaToTable(a, "test"), b)
+var b = {}
+assert("string", schemaToTable(a, "test"), b)
 
 var a = jsonschema(`type: number`)
-var b = {"test": {"type": "number"}}
-assert(schemaToTable(a, "test"), b)
+var b = {}
+assert("number", schemaToTable(a, "test"), b)
 
 var a = jsonschema(`
 type: string
@@ -100,7 +128,7 @@ enum:
 - a
 - b`)
 var b = {"test":{"id":{"type":"number"},"value":{"type":"string"}}}
-assert(schemaToTable(a, "test"), b)
+assert("enum string", schemaToTable(a, "test"), b)
 
 var a = jsonschema(`
 type: object
@@ -111,7 +139,7 @@ properties:
     type: number
 `)
 var b = {"test":{"bbb":{"type":"number"},"aaa":{"type":"string"}}}
-assert(schemaToTable(a, "test"), b)
+assert("object", schemaToTable(a, "test"), b)
 
 var a = jsonschema(`
 type: object
@@ -125,7 +153,7 @@ properties:
     - b
 `)
 var b = {"test":{"bbb":{"type":"number","foreign":"bbb"},"aaa":{"type":"string"}},"bbb":{"id":{"type":"number"},"value":{"type":"string"}}}
-assert(schemaToTable(a, "test"), b)
+assert("enum string in object", schemaToTable(a, "test"), b)
 
 var a = jsonschema(`
 type: object
