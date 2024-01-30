@@ -6,26 +6,77 @@ import (
 	"github.com/dop251/goja"
 	"github.com/dop251/goja_nodejs/console"
 	"github.com/dop251/goja_nodejs/require"
+	"github.com/pb33f/libopenapi"
+	"github.com/pb33f/libopenapi-validator"
 	highbase "github.com/pb33f/libopenapi/datamodel/high/base"
-	"github.com/pb33f/libopenapi/datamodel/low"
+	highv3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	low "github.com/pb33f/libopenapi/datamodel/low"
 	lowbase "github.com/pb33f/libopenapi/datamodel/low/base"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 )
 
-func loadJsonSchema(data string) *highbase.Schema {
+func loadJsonSchema(data string) (*highbase.Schema, error) {
 	var node yaml.Node
-	_ = yaml.Unmarshal([]byte(data), &node)
+	err := yaml.Unmarshal([]byte(data), &node)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
 	var lowSchema lowbase.Schema
-	_ = low.BuildModel(node.Content[0], &lowSchema)
-	_ = lowSchema.Build(context.Background(), node.Content[0], nil)
-	return highbase.NewSchema(&lowSchema)
+	err = low.BuildModel(node.Content[0], &lowSchema)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	err = lowSchema.Build(context.Background(), node.Content[0], nil)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return highbase.NewSchema(&lowSchema), nil
+}
+
+func loadOpenAPISchema(data string) (*libopenapi.DocumentModel[highv3.Document], []error) {
+
+	doc, err := libopenapi.NewDocument([]byte(data))
+	if err != nil {
+		return nil, []error{err}
+	}
+
+	docValidator, validatorErrs := validator.NewValidator(doc)
+
+	if validatorErrs != nil {
+		return nil, validatorErrs
+	}
+
+	valid, validationErrs := docValidator.ValidateDocument()
+
+	if !valid {
+		var errs []error
+
+		log.Println(len(validationErrs))
+		for _, e := range validationErrs {
+			for _, err := range e.SchemaValidationErrors {
+				errs = append(errs, err)
+			}
+		}
+
+		return nil, errs
+	}
+
+	v3Model, _ := doc.BuildV3Model()
+	return v3Model, nil
 }
 
 func runTemplate(templPath string) {
 	vm := goja.New()
 	vm.Set("jsonschema", loadJsonSchema)
+	vm.Set("openapischema", loadOpenAPISchema)
 
 	registry := new(require.Registry)
 	registry.Enable(vm)
