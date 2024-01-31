@@ -1,0 +1,14 @@
+openapi: 3.0.1
+info:
+  title: api
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    Hoge:
+      type: object
+      properties:
+        aaa:
+          type: string
+        bbb:
+          type: number

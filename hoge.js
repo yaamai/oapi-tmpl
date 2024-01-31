@@ -173,3 +173,8 @@ components:
 var [s, err] = openapischema(a)
 assert(err, [])
 assert(extractTableSchema(s), {}, "object has allOf refs")
+
+
+var [err, data] = file("object.yaml")
+console.log(data, Object.keys(err))
+assert(openapischema(data))

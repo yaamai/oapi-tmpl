@@ -73,8 +73,15 @@ func loadOpenAPISchema(data string) (*libopenapi.DocumentModel[highv3.Document],
 	return v3Model, nil
 }
 
+func loadFile(path string) (string, error) {
+	// goja maybe lacking ArrayBuffer.
+	data, err := os.ReadFile(path)
+	return string(data), err
+}
+
 func runTemplate(templPath string) {
 	vm := goja.New()
+	vm.Set("file", loadFile)
 	vm.Set("jsonschema", loadJsonSchema)
 	vm.Set("openapischema", loadOpenAPISchema)
 
