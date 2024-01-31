@@ -13,11 +13,11 @@ function deepCompare (arg1, arg2) {
   return false;
 }
 
-function assert(m, a, b) {
+function assert(a, b, m) {
   if (deepCompare(a, b)) {
-    console.log("TEST: " + m.padEnd(32) + ": OK")
+    console.log("TEST: " + (m||"").padEnd(32) + ": OK")
   } else {
-    console.log("TEST: " + m.padEnd(32) + ": FAIL")
+    console.log("TEST: " + (m||"").padEnd(32) + ": FAIL")
     console.log(JSON.stringify(a))
     console.log(JSON.stringify(b))
   }
@@ -57,23 +57,22 @@ function getRef(schema) {
   }
 }
 
-function schemaToTables(name, schema, tables, rels) {
+function schemaToTables(name, schema, ctx) {
   if (schema.Type == "object") {
-    tables[name] = {}
+    ctx.tables[name] = {}
     Object.keys(schema.Properties).forEach((propname) => {
       const propSchema = schema.Properties[propname].Schema()
       const type = propSchema.Type[0]
       const ref = getRef(propSchema)
 
       if (!ref) {
-        tables[name][propname] = {type: type}
+        ctx.tables[name][propname] = {type: type}
       }
 
       if (ref) {
-        rels.push({parent: name, child: ref[0]})
+        ctx.rels.push({parent: name, child: ref[0]})
       }
     })
-    return
   }
   // enum string
   //  add table
@@ -88,28 +87,14 @@ function schemaToTables(name, schema, tables, rels) {
 
 
 function extractTableSchema(doc) {
-  var tables = []
-  var relations = []
+  var ctx = {tables: {}, rels: []}
 
   const schemas = doc.Model.Components.Schemas
   Object.keys(schemas).forEach((name) => {
     const schema = schemas[name].Schema()
-    schemaToTables(name, schema, tables, relations)
-
-    /*
-    if (schema.Type[0] == "object") {
-      var table = {}
-      Object.keys(schema.Properties).forEach((propname) => {
-        const propSchema = schema.Properties[propname].Schema()
-        const type = propSchema.Type[0]
-        table[propname] = {type: type}
-      })
-      assert("", table)
-    }
-    assert("", )
-    */
+    schemaToTables(name, schema, ctx)
   })
-  console.log()
+  return ctx
 }
 
 a = `
@@ -128,9 +113,10 @@ components:
         bbb:
           type: number
 `
-var [s, err] = openapischema(a)
-assert("", err, [])
-assert("", extractTableSchema(s), {})
+b = {"tables":{"Hoge":{"bbb":{"type":"number"},"aaa":{"type":"string"}}},"rels":[]}
+var [doc, err] = openapischema(a)
+assert(err, [])
+assert(extractTableSchema(doc), b, "has simple object")
 
 
 a = `
@@ -156,8 +142,9 @@ components:
     
 `
 var [s, err] = openapischema(a)
-assert("", err, [])
-assert("", extractTableSchema(s), {})
+b = {"tables":{"Bbb":{"bbb":{"type":"string"}},"Hoge":{"aaa":{"type":"string"}}},"rels":[{"parent":"Hoge","child":"Bbb"}]}
+assert(err, [])
+assert(extractTableSchema(s), b, "ref in object properties")
 
 a = `
 openapi: 3.0.1
@@ -184,5 +171,5 @@ components:
     
 `
 var [s, err] = openapischema(a)
-assert("object has allOf refs", err, [])
-assert("object has allOf refs", extractTableSchema(s), {})
+assert(err, [])
+assert(extractTableSchema(s), {}, "object has allOf refs")
