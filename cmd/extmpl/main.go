@@ -19,6 +19,17 @@ import (
 	"os"
 )
 
+func loadYaml(data string) (interface{}, error) {
+	var out interface{}
+
+	err := yaml.Unmarshal([]byte(data), &out)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 func loadJsonSchema(data string) (*highbase.Schema, error) {
 	var node yaml.Node
 	err := yaml.Unmarshal([]byte(data), &node)
@@ -118,6 +129,7 @@ func newStyleFromCell(book *excelize.File, sheet string, coord string, alignment
 func runTemplate(templPath string) {
 	vm := goja.New()
 	vm.Set("file", loadFile)
+	vm.Set("yaml", loadYaml)
 	vm.Set("jsonschema", loadJsonSchema)
 	vm.Set("openapischema", loadOpenAPISchema)
 	vm.Set("excelfile", loadExcelFile)
