@@ -5,10 +5,21 @@ info:
 paths: {}
 components:
   schemas:
-    Hoge:
+    User:
       type: object
       properties:
-        aaa:
+        id:
           type: string
-        bbb:
-          type: number
+        name:
+          type: string
+    UserList:
+      type: array
+      items:
+        $ref: "#/components/schemas/User"
+    Group:
+      type: object
+      properties:
+        users:
+          $ref: "#/components/schemas/UserList"
+        name:
+          type: string
