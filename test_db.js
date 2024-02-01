@@ -89,12 +89,14 @@ function objectSchemaToTable(ctx, name, schema) {
     }
 
     // when object's property has object or allOf object, create column and 1:1 relation
+    // similary rules apply when object's property has array or allOf array, create column and 1:1 relation
     let isRef = propSchema.ParentProxy.IsReference()
     let isAllOf = propSchema.AllOf.length > 0
-    let allOfSchemas = propSchema.AllOf.filter(s => s.Schema().ParentProxy.IsReference() && s.Schema().Type == "object")
+    let allOfObjectSchemas = propSchema.AllOf.filter(s => s.Schema().ParentProxy.IsReference() && s.Schema().Type == "object")
+    let allOfArraySchemas = propSchema.AllOf.filter(s => s.Schema().ParentProxy.IsReference() && s.Schema().Type == "array")
 
     if(propType == "object" && !isRef) console.warn("WARN: can't determine relation target")
-    if(isAllOf && allOfSchemas.length > 1) console.warn("WARN: can't determine relation target")
+    if(isAllOf && allOfObjectSchemas.length > 1) console.warn("WARN: can't determine relation target")
 
     if(propType == "object" && isRef) {
       let refname = getRef(propSchema)
@@ -103,8 +105,14 @@ function objectSchemaToTable(ctx, name, schema) {
       continue
     }
 
-    if(isAllOf && allOfSchemas.length == 1) {
-      let refname = getRef(allOfSchemas[0].Schema())
+    if(isAllOf && allOfObjectSchemas.length == 1) {
+      let refname = getRef(allOfObjectSchemas[0].Schema())
+      let tablename = utils.toSnake(refname) + "s"
+      table.addColumn(new Column(propName, "number", new Foreign(propName, tablename, refname)))
+    }
+
+    if(isAllOf && allOfArraySchemas.length == 1) {
+      let refname = getRef(allOfArraySchemas[0].Schema())
       let tablename = utils.toSnake(refname) + "s"
       table.addColumn(new Column(propName, "number", new Foreign(propName, tablename, refname)))
     }
@@ -258,6 +266,31 @@ TEST_DATA = yaml(`
           properties:
             ccc:
               type: integer
+
+- desc: object with allOf array ref
+  expect: {"tables":{"hoges":{"name":"hoges","altname":"","columns":{"bbb":{"name":"bbb","type":"number","foreign":{"keyname":"bbb","tablename":"fugas","refname":"Fuga"}},"aaa":{"name":"aaa","type":"string","foreign":null}}}}}
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: object
+          properties:
+            aaa:
+              type: string
+            bbb:
+              allOf:
+              - description: bbb
+              - $ref: "#/components/schemas/Fuga"
+        Fuga:
+          type: array
+          items:
+            type: string
 `)
 
 for(let test of TEST_DATA) {
