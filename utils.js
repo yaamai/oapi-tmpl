@@ -50,12 +50,16 @@ function deepCompare (arg1, arg2) {
 }
 
 function assert(a, b, m) {
-  if (deepCompare(a, b)) {
-    console.log("TEST: " + (m||"").padEnd(32) + ": OK")
+  const rdiff = require('./recursive-diff.min.js')
+  const diff = rdiff.getDiff(a, b)
+
+  if (diff.length == 0) {
+    console.log("TEST: " + (m||"").padEnd(48) + ": OK")
   } else {
-    console.log("TEST: " + (m||"").padEnd(32) + ": FAIL")
-    console.log(JSON.stringify(a))
-    console.log(JSON.stringify(b))
+    console.log("TEST: " + (m||"").padEnd(48) + ": FAIL")
+    console.log(JSON.stringify(a, null, "  "))
+    console.log(JSON.stringify(b, null, "  "))
+    console.log(JSON.stringify(diff))
   }
 }
 
