@@ -1,3 +1,5 @@
+const utils = require('./utils.js')
+
 function deepCompare (arg1, arg2) {
   if (Object.prototype.toString.call(arg1) === Object.prototype.toString.call(arg2)){
     if (Object.prototype.toString.call(arg1) === '[object Object]' || Object.prototype.toString.call(arg1) === '[object Array]' ){
@@ -29,6 +31,15 @@ function _toSnake(camel) {
 
 function _getRef(schema) {
   return schema.ParentProxy.GetReference().match(/[^\/]+$/)
+}
+
+function _getJAName(schema) {
+  const janame = schema.Extensions["x-janame"]
+  if (janame) {
+    return janame
+  }
+
+  return schema.Description
 }
 
 // check allOf composition has empty property and refs
@@ -65,7 +76,7 @@ function schemaToTables(name, schema, ctx) {
   if (schema.Type == "object") {
     // table name are commonly plural form
     const tablename = _toSnake(name) + "s"
-    ctx.tables[tablename] = {"_rels": {}}
+    ctx.tables[tablename] = {"_janame": _getJAName(schema), "_rels": {}}
 
     Object.keys(schema.Properties).forEach((propname) => {
       const propSchema = schema.Properties[propname].Schema()
@@ -77,7 +88,7 @@ function schemaToTables(name, schema, ctx) {
       }
 
       if (!ref) {
-        ctx.tables[tablename][propname] = {type: type}
+        ctx.tables[tablename][propname] = {type: type, _janame: _getJAName(propSchema), desc: propSchema.Description}
       }
 
       if (ref) {
@@ -88,7 +99,7 @@ function schemaToTables(name, schema, ctx) {
 
   if (schema.Type == "array") {
     const tablename = _toSnake(name)
-    ctx.tables[tablename] = {"_rels": {}, id: {type: "number"}}
+    ctx.tables[tablename] = {"_rels": {}, id: {type: "number"}, _janame: _getJAName(schema)}
   }
   // enum string
   //  add table
@@ -139,7 +150,35 @@ function tablesToSQL(tables) {
   })
 }
 
-var data = file("object.yaml")
+function tablesToExcel(book, tables) {
+  Object.keys(tables).forEach((tableName) => {
+    var pos = ["F8", "Q8", "AB8", "AK8", "AU8"]
+
+    console.log("create", tableName, "sheet")
+    var sheetName = tables[tableName]["_janame"]
+    if (sheetName.split("\n").length > 0) {
+      sheetName = sheetName.split("\n")[0]
+    }
+
+    sheetName = sheetName.slice(0, 20)
+    sheetName = sheetName.replace("/", "")
+    if (!sheetName) {
+      console.log("WARN: ", sheetName)
+      console.log(sheetName)
+      console.log(JSON.stringify(tables[tableName]))
+      return
+    }
+    utils.dup(book, "template", sheetName)
+
+    Object.keys(tables[tableName]).filter(e => !e.startsWith("_")).forEach((colName) => {
+      const col = tables[tableName][colName]
+      utils.sets(book, sheetName, pos, [col._janame, colName, col.type, "??, col.desc])
+      pos = utils.offsets(pos, 1, 1)
+    })
+  })
+}
+
+var data = file("if.yaml")
 // assert(err)
 // console.log(data[0])
 var [doc, err] = openapischema(data)
@@ -149,3 +188,6 @@ assert(result)
 
 tablesToSQL(result.tables)
 
+var book = excelfile("data.base.xlsm")
+tablesToExcel(book, result.tables)
+book.SaveAs("data.xlsm")

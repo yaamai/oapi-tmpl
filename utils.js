@@ -12,19 +12,19 @@ function sets(book, sheet, coords, vals) {
 function offsets(coords, axis, offset) {
   return coords.map((c) => {
     var err, col, row, coord
-		[col, row] = CellNameToCoordinates(c)
+		[col, row] = excel.cellNameToCoordinates(c)
 
     if (axis == 0) {
-			return CoordinatesToCellName(col+offset, row)
+			return excel.coordinatesToCellName(col+offset, row)
     } else {
-			return CoordinatesToCellName(col, row+offset)
+			return excel.coordinatesToCellName(col, row+offset)
     }
   })
 }
 
 // set cell indent
 function indent(book, sheet, coord, level) {
-  style = NewStyleFromCell(book, sheet, coord, {Indent: level})
+  style = excel.newStyleFromCell(book, sheet, coord, {Indent: level})
   book.SetCellStyle(sheet, coord, coord, style)
 }
 
@@ -34,3 +34,8 @@ function dup(book, templateSheetName, sheetName) {
     sourceIndex = book.GetSheetIndex(templateSheetName)
     book.CopySheet(sourceIndex, destIndex)
 }
+
+exports.dup = dup
+exports.sets = sets
+exports.offsets = offsets
+
