@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"github.com/dop251/goja"
 	"github.com/dop251/goja_nodejs/console"
@@ -12,6 +13,7 @@ import (
 	highv3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	low "github.com/pb33f/libopenapi/datamodel/low"
 	lowbase "github.com/pb33f/libopenapi/datamodel/low/base"
+	"github.com/xuri/excelize/v2"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
@@ -79,11 +81,51 @@ func loadFile(path string) (string, error) {
 	return string(data), err
 }
 
+func loadExcelFile(path string) (*excelize.File, error) {
+	if path == "" {
+		return excelize.NewFile(), nil
+	} else {
+		return excelize.OpenFile(path)
+	}
+}
+
+func newStyleFromCell(book *excelize.File, sheet string, coord string, alignment map[string]interface{}) (int, error) {
+	styleId, err := book.GetCellStyle(sheet, coord)
+	if err != nil {
+		return 0, err
+	}
+
+	style, err := book.GetStyle(styleId)
+	if err != nil {
+		return 0, err
+	}
+
+	bytes, err := json.Marshal(alignment)
+	if err != nil {
+		return 0, err
+	}
+
+	align := &excelize.Alignment{}
+	err = json.Unmarshal(bytes, align)
+	if err != nil {
+		return 0, err
+	}
+
+	style.Alignment = align
+	return book.NewStyle(style)
+}
+
 func runTemplate(templPath string) {
 	vm := goja.New()
 	vm.Set("file", loadFile)
 	vm.Set("jsonschema", loadJsonSchema)
 	vm.Set("openapischema", loadOpenAPISchema)
+	vm.Set("excelfile", loadExcelFile)
+	vm.Set("excel", map[string]interface{}{
+		"cellNameToCoordinates": excelize.CellNameToCoordinates,
+		"coordinatesToCellName": excelize.CoordinatesToCellName,
+		"newStyleFromCell":      newStyleFromCell,
+	})
 
 	registry := new(require.Registry)
 	registry.Enable(vm)
