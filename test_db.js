@@ -72,6 +72,20 @@ function getRef(schema) {
   return schema.ParentProxy.GetReference().match(/[^\/]+$/)[0]
 }
 
+function arraySchemaToTable(ctx, name, schema) {
+  // table name are commonly plural form
+  let tablename = utils.toSnake(name) + "s"
+  let tablenameJa = utils.getJAName(schema)
+  let table = ctx.ensureTable(tablename, tablenameJa)
+
+  // primitive types are added to column with fixed column name and fixed id (array can't have id in jsonschema)
+  let subType = schema.Items.A.Schema().Type[0]
+  if(["number", "string", "integer", "boolean"].includes(subType)) {
+    table.addColumn(new Column("id", "number", null))
+    table.addColumn(new Column("value", subType, null))
+  }
+}
+
 function objectSchemaToTable(ctx, name, schema) {
   // table name are commonly plural form
   const tablename = utils.toSnake(name) + "s"
@@ -141,6 +155,7 @@ function objectSchemaToTable(ctx, name, schema) {
 
 function schemaToTable(ctx, name, schema) {
   if (schema.Type == "object") objectSchemaToTable(ctx, name, schema)
+  if (schema.Type == "array") arraySchemaToTable(ctx, name, schema)
   if (schema.AllOf.length > 0) {
     for(let subSchema of schema.AllOf) {
       schemaToTable(ctx, name, subSchema.Schema())
@@ -291,6 +306,63 @@ TEST_DATA = yaml(`
           type: array
           items:
             type: string
+
+- desc: primitive in array
+  expect: {"tables":{"hoges":{"name":"hoges","altname":"","columns":{"id":{"name":"id","type":"number","foreign":null},"value":{"name":"value","type":"string","foreign":null}}}}}
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: array
+          items:
+            type: string
+
+- desc: primitive ref in array
+  expect: {"tables":{"hoges":{"name":"hoges","altname":"","columns":{"id":{"name":"id","type":"number","foreign":null},"value":{"name":"value","type":"boolean","foreign":null}}}}}
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: array
+          items:
+            $ref: "#/components/schemas/Fuga"
+        Fuga:
+          type: boolean
+
+- desc: objectt in array
+  expect: {"tables":{"hoges":{"name":"hoges","altname":"","columns":{"id":{"name":"id","type":"number","foreign":null},"value":{"name":"value","type":"boolean","foreign":null}}}}}
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: array
+          items:
+            $ref: "#/components/schemas/Fuga"
+        Fuga:
+          type: object
+          properties:
+            aaa:
+              type: string
+            bbb:
+              type: string
 `)
 
 for(let test of TEST_DATA) {
