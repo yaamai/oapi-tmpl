@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"github.com/dop251/goja"
 	"github.com/dop251/goja_nodejs/console"
 	"github.com/dop251/goja_nodejs/require"
@@ -133,7 +132,7 @@ func runTemplate(templPath string) {
 	vm.Set("jsonschema", loadJsonSchema)
 	vm.Set("openapischema", loadOpenAPISchema)
 	vm.Set("excelfile", loadExcelFile)
-	vm.Set("excel", map[string]interface{}{
+	vm.Set("excelize", map[string]interface{}{
 		"cellNameToCoordinates": excelize.CellNameToCoordinates,
 		"coordinatesToCellName": excelize.CoordinatesToCellName,
 		"newStyleFromCell":      newStyleFromCell,
@@ -155,8 +154,9 @@ func runTemplate(templPath string) {
 }
 
 func main() {
-	templPath := flag.String("templ", "template.js", "template file (javascript)")
-	flag.Parse()
-
-	runTemplate(*templPath)
+    if len(os.Args) < 1 {
+        return
+    }
+	templPath := os.Args[1]
+	runTemplate(templPath)
 }
