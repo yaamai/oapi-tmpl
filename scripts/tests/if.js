@@ -3,6 +3,29 @@ const oapi = require('./scripts/oapi.js')
 
 TEST_DATA = yaml(`
 
+- desc: object and description allOf
+  expect:
+  - ["Hoge", ["Hoge"], 0]
+  - ["aaa", ["Hoge", "aaa"], 1]
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          allOf:
+          - $ref: "#/components/schemas/Foo"
+          - description: bbb
+        Foo:
+          type: object
+          properties:
+            aaa:
+              type: string
+
 - desc: all object allOf
   expect:
   - ["Hoge", ["Hoge"], 0]

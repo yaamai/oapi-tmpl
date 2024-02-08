@@ -19,7 +19,7 @@ function toSnake(camel) {
 function uniqBy(array, f) {
   const uniquedArray = [];
   for (const elem of array) {
-    if (uniquedArray.findIndex((b) => f(elem, b)) < 0)
+    if (uniquedArray.findIndex((b) => f(elem, b)) < 0) 
       uniquedArray.push(elem);
   }
   return uniquedArray;

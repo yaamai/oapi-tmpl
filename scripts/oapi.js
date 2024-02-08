@@ -14,8 +14,8 @@ function flatten(name, parents, schema, indent) {
       output = output.concat(rows)
     }
 
-		output = utils.uniqBy(output, (a,b) => {
-      console.log(a[1].join("-"), b[1].join("-"))
+    // console.log("##", JSON.stringify(output))
+		output = utils.uniqBy(output, (a, b) => {
       return a[1].join("-") == b[1].join("-")
 		})
 
@@ -40,6 +40,9 @@ function flatten(name, parents, schema, indent) {
     return output
   } else if (type == "string") {
     return [[name, [...parents, name], indent]]
+  } else {
+    // TODO: console.log("FAILED")
+    return []
   }
 }
 
