@@ -16,5 +16,15 @@ function toSnake(camel) {
   return camel.replace(/[A-Z][a-z]/g, c => `_${c.toLowerCase()}`).replace(/[A-Z]+/g, c => `_${c.toLowerCase()}`).replace(/^_/, "")
 }
 
+function uniqBy(array, f) {
+  const uniquedArray = [];
+  for (const elem of array) {
+    if (uniquedArray.findIndex((b) => f(elem, b)) < 0)
+      uniquedArray.push(elem);
+  }
+  return uniquedArray;
+}
+
 exports.assert = assert
 exports.toSnake = toSnake
+exports.uniqBy = uniqBy
