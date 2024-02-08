@@ -2,6 +2,30 @@ const utils = require('./scripts/utils.js')
 const oapi = require('./scripts/oapi.js')
 
 TEST_DATA = yaml(`
+- desc: altname of object and description allOf
+  expect:
+  - ["AAA", ["Hoge"], 0]
+  - ["CCC", ["Hoge", "aaa"], 1]
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          allOf:
+          - $ref: "#/components/schemas/Foo"
+          - x-janame: AAA
+        Foo:
+          type: object
+          description: BBB
+          properties:
+            aaa:
+              description: CCC
+              type: string
 
 - desc: object and description allOf
   expect:
@@ -19,7 +43,7 @@ TEST_DATA = yaml(`
         Hoge:
           allOf:
           - $ref: "#/components/schemas/Foo"
-          - description: bbb
+          - x-hogehoge: bbb
         Foo:
           type: object
           properties:
