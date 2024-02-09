@@ -2,6 +2,50 @@ const utils = require('./scripts/utils.js')
 const oapi = require('./scripts/oapi.js')
 
 TEST_DATA = yaml(`
+- desc: mixed oneOf,allOf
+  expect:
+  - ["AAA", ["Hoge"], 0]
+  - ["CCC", ["Hoge", "aaa"], 1]
+  - ["DDD", ["Hoge", "bbb"], 1]
+  - ["EEE", ["Hoge", "bbb", "Bar"], 2]
+  - ["FFF", ["Hoge", "bbb", "Bar", "list"], 3]
+  - ["GGG", ["Hoge", "bbb", "Bar", "list", "Baz"], 4]
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          allOf:
+          - $ref: "#/components/schemas/ID"
+          - oneOf:
+            - $ref: "#/components/schemas/A"
+            - $ref: "#/components/schemas/B"
+        ID:
+          type: object
+          properties:
+            id:
+              description: IDID
+              type: string
+        A:
+          type: object
+          description: Aobject
+          properties:
+            a:
+              description: aa
+              type: string
+        B:
+          type: object
+          description: Bobject
+          properties:
+            b:
+              description: bb
+              type: number
+
 - desc: array and object deeply nested
   expect:
   - ["AAA", ["Hoge"], 0]

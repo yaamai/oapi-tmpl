@@ -14,55 +14,74 @@ function getJaName(schema, name) {
   }
 }
 
+function _flattenAllOrOneOf(name, parents, schema, indent, target) {
+  var output = []
+  var janame = ""
+  for(let key of Object.keys(target)) {
+		const subSchema = target[key].Schema()
+		janame = getJaName(subSchema)
+    output = output.concat(flatten(name, parents, subSchema, indent))
+  }
+
+  console.log("allOf/oneOf", JSON.stringify(output))
+	// remove duplicate properties
+	output = utils.uniqBy(output, (a, b) => {
+    return a[1].join("-") == b[1].join("-")
+	})
+
+	// overwrite janame to latest allOf member's janame
+  // assume output[0] is object (currently supports only allOf: [object, object])
+  if (janame) {
+    output[0][0] = janame
+  }
+
+  return output
+}
+
+function _flattenObject(name, parents, schema, indent) {
+  const janame = getJaName(schema, name)
+  var output = []
+  output.push([janame, [...parents, name], indent])
+
+  for(let propname of Object.keys(schema.Properties).sort()) {
+    const propSchema = schema.Properties[propname].Schema()
+    output = output.concat(flatten(propname, [...parents, name], propSchema, indent+1))
+  }
+  return output
+}
+
+function _flattenArray(name, parents, schema, indent) {
+  const janame = getJaName(schema, name)
+  const itemSchema = schema.Items.A.Schema()
+
+  var output = []
+  output.push([janame, [...parents, name], indent])
+
+  // TODO: check itemSchema is ref
+  const itemSchemaName = getRefName(itemSchema)
+  output = output.concat(flatten(itemSchemaName, [...parents, name], itemSchema, indent+1))
+  return output
+}
+
 function flatten(name, parents, schema, indent) {
   const type = schema.Type
-  var janame = getJaName(schema, name)
 
   if (Object.keys(schema.AllOf).length > 0) {
-    var output = []
-    var janame = ""
-    for(let key of Object.keys(schema.AllOf)) {
-			const subSchema = schema.AllOf[key].Schema()
-			janame = getJaName(subSchema)
-      output = output.concat(flatten(name, parents, subSchema, indent))
-    }
-
-    // console.log("##", JSON.stringify(output))
-
-		// remove duplicate properties
-		output = utils.uniqBy(output, (a, b) => {
-      return a[1].join("-") == b[1].join("-")
-		})
-
-		// overwrite janame to latest allOf member's janame
-    // assume output[0] is object (currently supports only allOf: [object, object])
-    if (janame) {
-      output[0][0] = janame
-    }
-
-    return output
+    return _flattenAllOrOneOf(name, parents, schema, indent, schema.AllOf)
+  } else if (Object.keys(schema.OneOf).length > 0) {
+    return _flattenAllOrOneOf(name, parents, schema, indent, schema.OneOf)
   } else if (type == "object") {
-    var output = []
-    output.push([janame, [...parents, name], indent])
-
-    for(let propname of Object.keys(schema.Properties).sort()) {
-      const propSchema = schema.Properties[propname].Schema()
-      output = output.concat(flatten(propname, [...parents, name], propSchema, indent+1))
-    }
-    return output
+    return _flattenObject(name, parents, schema, indent)
   } else if (type == "array") {
-    var output = []
-    output.push([janame, [...parents, name], indent])
-
-    const itemSchema = schema.Items.A.Schema()
-    // TODO: check itemSchema is ref
-    const itemSchemaName = getRefName(itemSchema)
-    output = output.concat(flatten(itemSchemaName, [...parents, name], itemSchema, indent+1))
-    return output
+    return _flattenArray(name, parents, schema, indent)
   } else if (type == "string") {
+    const janame = getJaName(schema, name)
+    return [[janame, [...parents, name], indent]]
+  } else if (type == "number") {
+    const janame = getJaName(schema, name)
     return [[janame, [...parents, name], indent]]
   } else {
-    // TODO: console.log("FAILED")
+    // TODO: check this codes are unreached
     return []
   }
 }
