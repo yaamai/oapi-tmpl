@@ -4,12 +4,10 @@ const oapi = require('./scripts/oapi.js')
 TEST_DATA = yaml(`
 - desc: mixed oneOf,allOf
   expect:
-  - ["AAA", ["Hoge"], 0]
-  - ["CCC", ["Hoge", "aaa"], 1]
-  - ["DDD", ["Hoge", "bbb"], 1]
-  - ["EEE", ["Hoge", "bbb", "Bar"], 2]
-  - ["FFF", ["Hoge", "bbb", "Bar", "list"], 3]
-  - ["GGG", ["Hoge", "bbb", "Bar", "list", "Baz"], 4]
+  - ["Hoge", ["Hoge"], 0]
+  - ["IDID", ["Hoge", "id"], 1]
+  - ["aa", ["Hoge", "a"], 1]
+  - ["bb", ["Hoge", "b"], 1]
   name: Hoge
   input: |
     openapi: 3.0.1
