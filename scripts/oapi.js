@@ -15,8 +15,9 @@ function getJaName(schema, name) {
 }
 
 class FlattenRow {
-  constructor(name, parents, indent) {
+  constructor(name, type, parents, indent) {
     this.name = name
+    this.type = type
     this.parents = parents
     this.indent = indent
   }
@@ -52,7 +53,7 @@ function _flattenAllOrOneOf(name, parents, schema, indent, target) {
 function _flattenObject(name, parents, schema, indent) {
   const janame = getJaName(schema, name)
   var output = []
-  output.push(new FlattenRow(janame, [...parents, name], indent))
+  output.push(new FlattenRow(janame, "object", [...parents, name], indent))
 
   for(let propname of Object.keys(schema.Properties).sort()) {
     const propSchema = schema.Properties[propname].Schema()
@@ -66,7 +67,7 @@ function _flattenArray(name, parents, schema, indent) {
   const itemSchema = schema.Items.A.Schema()
 
   var output = []
-  output.push(new FlattenRow(janame, [...parents, name], indent))
+  output.push(new FlattenRow(janame, "array", [...parents, name], indent))
 
   // TODO: check itemSchema is ref
   const itemSchemaName = getRefName(itemSchema)
@@ -87,10 +88,10 @@ function flatten(name, parents, schema, indent) {
     return _flattenArray(name, parents, schema, indent)
   } else if (type == "string") {
     const janame = getJaName(schema, name)
-    return [new FlattenRow(janame, [...parents, name], indent)]
+    return [new FlattenRow(janame, "string", [...parents, name], indent)]
   } else if (type == "number") {
     const janame = getJaName(schema, name)
-    return [new FlattenRow(janame, [...parents, name], indent)]
+    return [new FlattenRow(janame, "number", [...parents, name], indent)]
   } else {
     // TODO: check this codes are unreached
     return []

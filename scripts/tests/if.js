@@ -5,15 +5,19 @@ TEST_DATA = yaml(`
 - desc: mixed oneOf,allOf
   expect:
   - name: Hoge
+    type: object
     parents: ["Hoge"]
     indent: 0
   - name: IDID
+    type: string
     parents: ["Hoge", "id"]
     indent: 1
   - name: aa
+    type: string
     parents: ["Hoge", "a"]
     indent: 1
   - name: bb
+    type: number
     parents: ["Hoge", "b"]
     indent: 1
   name: Hoge
@@ -55,21 +59,27 @@ TEST_DATA = yaml(`
 - desc: array and object deeply nested
   expect:
   - name: AAA
+    type: object
     parents: ["Hoge"]
     indent: 0
   - name: CCC
+    type: string
     parents: ["Hoge", "aaa"]
     indent: 1
   - name: DDD
+    type: array
     parents: ["Hoge", "bbb"]
     indent: 1
   - name: EEE
+    type: object
     parents: ["Hoge", "bbb", "Bar"]
     indent: 2
   - name: FFF
+    type: array
     parents: ["Hoge", "bbb", "Bar", "list"]
     indent: 3
   - name: GGG
+    type: object
     parents: ["Hoge", "bbb", "Bar", "list", "Baz"]
     indent: 4
   name: Hoge
@@ -113,9 +123,11 @@ TEST_DATA = yaml(`
 - desc: altname of object and description allOf
   expect:
   - name: AAA
+    type: object
     parents: ["Hoge"]
     indent: 0
   - name: CCC
+    type: string
     parents: ["Hoge", "aaa"]
     indent: 1
   name: Hoge
@@ -142,9 +154,11 @@ TEST_DATA = yaml(`
 - desc: object and description allOf
   expect:
   - name: Hoge
+    type: object
     parents: ["Hoge"]
     indent: 0
   - name: aaa
+    type: string
     parents: ["Hoge", "aaa"]
     indent: 1
   name: Hoge
@@ -169,12 +183,15 @@ TEST_DATA = yaml(`
 - desc: all object allOf
   expect:
   - name: Hoge
+    type: object
     parents: ["Hoge"]
     indent: 0
   - name: aaa
+    type: string
     parents: ["Hoge", "aaa"]
     indent: 1
   - name: ccc
+    type: string
     parents: ["Hoge", "ccc"]
     indent: 1
   name: Hoge
@@ -204,15 +221,19 @@ TEST_DATA = yaml(`
 - desc: array in array
   expect:
   - name: Hoge
+    type: array
     parents: ["Hoge"]
     indent: 0
   - name: Fuga
+    type: array
     parents: ["Hoge", "Fuga"]
     indent: 1
   - name: Foo
+    type: object
     parents: ["Hoge", "Fuga", "Foo"]
     indent: 2
   - name: ccc
+    type: string
     parents: ["Hoge", "Fuga", "Foo", "ccc"]
     indent: 3
   name: Hoge
@@ -242,12 +263,15 @@ TEST_DATA = yaml(`
 - desc: object ref in array
   expect:
   - name: Hoge
+    type: array
     parents: ["Hoge"]
     indent: 0
   - name: Foo
+    type: object
     parents: ["Hoge", "Foo"]
     indent: 1
   - name: ccc
+    type: string
     parents: ["Hoge", "Foo", "ccc"]
     indent: 2
   name: Hoge
@@ -273,15 +297,19 @@ TEST_DATA = yaml(`
 - desc: object ref in object
   expect:
   - name: Hoge
+    type: object
     parents: ["Hoge"]
     indent: 0
   - name: aaa
+    type: string
     parents: ["Hoge", "aaa"]
     indent: 1
   - name: bbb
+    type: object # TODO: check this is correct or not.
     parents: ["Hoge", "bbb"]
     indent: 1
   - name: ccc
+    type: string
     parents: ["Hoge", "bbb", "ccc"]
     indent: 2
   name: Hoge
@@ -309,9 +337,11 @@ TEST_DATA = yaml(`
 - desc: primitive in array
   expect:
   - name: Hoge
+    type: array
     parents: ["Hoge"]
     indent: 0
   - name: Foo
+    type: string
     parents: ["Hoge", "Foo"]
     indent: 1
   name: Hoge
@@ -333,9 +363,11 @@ TEST_DATA = yaml(`
 - desc: object
   expect:
   - name: Hoge
+    type: object
     parents: ["Hoge"]
     indent: 0
   - name: aaa
+    type: string
     parents: ["Hoge", "aaa"]
     indent: 1
   name: Hoge
@@ -356,6 +388,7 @@ TEST_DATA = yaml(`
 - desc: primitive
   expect:
   - name: Hoge
+    type: string
     parents: ["Hoge"]
     indent: 0
   name: Hoge
