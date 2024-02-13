@@ -14,6 +14,17 @@ function getJaName(schema, name) {
   }
 }
 
+class FlattenRow {
+  constructor(name, parents, indent) {
+    this.name = name
+    this.parents = parents
+    this.indent = indent
+  }
+  path() {
+    return this.parents.join("-")
+  }
+}
+
 function _flattenAllOrOneOf(name, parents, schema, indent, target) {
   var output = []
   var janame = ""
@@ -26,13 +37,13 @@ function _flattenAllOrOneOf(name, parents, schema, indent, target) {
   console.log("allOf/oneOf", JSON.stringify(output))
 	// remove duplicate properties
 	output = utils.uniqBy(output, (a, b) => {
-    return a[1].join("-") == b[1].join("-")
+    return a.path() == b.path()
 	})
 
 	// overwrite janame to latest allOf member's janame
   // assume output[0] is object (currently supports only allOf: [object, object])
   if (janame) {
-    output[0][0] = janame
+    output[0].name = janame
   }
 
   return output
@@ -41,7 +52,7 @@ function _flattenAllOrOneOf(name, parents, schema, indent, target) {
 function _flattenObject(name, parents, schema, indent) {
   const janame = getJaName(schema, name)
   var output = []
-  output.push([janame, [...parents, name], indent])
+  output.push(new FlattenRow(janame, [...parents, name], indent))
 
   for(let propname of Object.keys(schema.Properties).sort()) {
     const propSchema = schema.Properties[propname].Schema()
@@ -55,7 +66,7 @@ function _flattenArray(name, parents, schema, indent) {
   const itemSchema = schema.Items.A.Schema()
 
   var output = []
-  output.push([janame, [...parents, name], indent])
+  output.push(new FlattenRow(janame, [...parents, name], indent))
 
   // TODO: check itemSchema is ref
   const itemSchemaName = getRefName(itemSchema)
@@ -76,10 +87,10 @@ function flatten(name, parents, schema, indent) {
     return _flattenArray(name, parents, schema, indent)
   } else if (type == "string") {
     const janame = getJaName(schema, name)
-    return [[janame, [...parents, name], indent]]
+    return [new FlattenRow(janame, [...parents, name], indent)]
   } else if (type == "number") {
     const janame = getJaName(schema, name)
-    return [[janame, [...parents, name], indent]]
+    return [new FlattenRow(janame, [...parents, name], indent)]
   } else {
     // TODO: check this codes are unreached
     return []

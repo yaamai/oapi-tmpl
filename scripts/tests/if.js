@@ -4,10 +4,18 @@ const oapi = require('./scripts/oapi.js')
 TEST_DATA = yaml(`
 - desc: mixed oneOf,allOf
   expect:
-  - ["Hoge", ["Hoge"], 0]
-  - ["IDID", ["Hoge", "id"], 1]
-  - ["aa", ["Hoge", "a"], 1]
-  - ["bb", ["Hoge", "b"], 1]
+  - name: Hoge
+    parents: ["Hoge"]
+    indent: 0
+  - name: IDID
+    parents: ["Hoge", "id"]
+    indent: 1
+  - name: aa
+    parents: ["Hoge", "a"]
+    indent: 1
+  - name: bb
+    parents: ["Hoge", "b"]
+    indent: 1
   name: Hoge
   input: |
     openapi: 3.0.1
@@ -46,12 +54,24 @@ TEST_DATA = yaml(`
 
 - desc: array and object deeply nested
   expect:
-  - ["AAA", ["Hoge"], 0]
-  - ["CCC", ["Hoge", "aaa"], 1]
-  - ["DDD", ["Hoge", "bbb"], 1]
-  - ["EEE", ["Hoge", "bbb", "Bar"], 2]
-  - ["FFF", ["Hoge", "bbb", "Bar", "list"], 3]
-  - ["GGG", ["Hoge", "bbb", "Bar", "list", "Baz"], 4]
+  - name: AAA
+    parents: ["Hoge"]
+    indent: 0
+  - name: CCC
+    parents: ["Hoge", "aaa"]
+    indent: 1
+  - name: DDD
+    parents: ["Hoge", "bbb"]
+    indent: 1
+  - name: EEE
+    parents: ["Hoge", "bbb", "Bar"]
+    indent: 2
+  - name: FFF
+    parents: ["Hoge", "bbb", "Bar", "list"]
+    indent: 3
+  - name: GGG
+    parents: ["Hoge", "bbb", "Bar", "list", "Baz"]
+    indent: 4
   name: Hoge
   input: |
     openapi: 3.0.1
@@ -92,8 +112,12 @@ TEST_DATA = yaml(`
 
 - desc: altname of object and description allOf
   expect:
-  - ["AAA", ["Hoge"], 0]
-  - ["CCC", ["Hoge", "aaa"], 1]
+  - name: AAA
+    parents: ["Hoge"]
+    indent: 0
+  - name: CCC
+    parents: ["Hoge", "aaa"]
+    indent: 1
   name: Hoge
   input: |
     openapi: 3.0.1
@@ -117,8 +141,12 @@ TEST_DATA = yaml(`
 
 - desc: object and description allOf
   expect:
-  - ["Hoge", ["Hoge"], 0]
-  - ["aaa", ["Hoge", "aaa"], 1]
+  - name: Hoge
+    parents: ["Hoge"]
+    indent: 0
+  - name: aaa
+    parents: ["Hoge", "aaa"]
+    indent: 1
   name: Hoge
   input: |
     openapi: 3.0.1
@@ -140,9 +168,15 @@ TEST_DATA = yaml(`
 
 - desc: all object allOf
   expect:
-  - ["Hoge", ["Hoge"], 0]
-  - ["aaa", ["Hoge", "aaa"], 1]
-  - ["ccc", ["Hoge", "ccc"], 1]
+  - name: Hoge
+    parents: ["Hoge"]
+    indent: 0
+  - name: aaa
+    parents: ["Hoge", "aaa"]
+    indent: 1
+  - name: ccc
+    parents: ["Hoge", "ccc"]
+    indent: 1
   name: Hoge
   input: |
     openapi: 3.0.1
@@ -169,10 +203,18 @@ TEST_DATA = yaml(`
 
 - desc: array in array
   expect:
-  - ["Hoge", ["Hoge"], 0]
-  - ["Fuga", ["Hoge", "Fuga"], 1]
-  - ["Foo", ["Hoge", "Fuga", "Foo"], 2]
-  - ["ccc", ["Hoge", "Fuga", "Foo", "ccc"], 3]
+  - name: Hoge
+    parents: ["Hoge"]
+    indent: 0
+  - name: Fuga
+    parents: ["Hoge", "Fuga"]
+    indent: 1
+  - name: Foo
+    parents: ["Hoge", "Fuga", "Foo"]
+    indent: 2
+  - name: ccc
+    parents: ["Hoge", "Fuga", "Foo", "ccc"]
+    indent: 3
   name: Hoge
   input: |
     openapi: 3.0.1
@@ -199,9 +241,15 @@ TEST_DATA = yaml(`
 
 - desc: object ref in array
   expect:
-  - ["Hoge", ["Hoge"], 0]
-  - ["Foo", ["Hoge", "Foo"], 1]
-  - ["ccc", ["Hoge", "Foo", "ccc"], 2]
+  - name: Hoge
+    parents: ["Hoge"]
+    indent: 0
+  - name: Foo
+    parents: ["Hoge", "Foo"]
+    indent: 1
+  - name: ccc
+    parents: ["Hoge", "Foo", "ccc"]
+    indent: 2
   name: Hoge
   input: |
     openapi: 3.0.1
@@ -224,10 +272,18 @@ TEST_DATA = yaml(`
 
 - desc: object ref in object
   expect:
-  - ["Hoge", ["Hoge"], 0]
-  - ["aaa", ["Hoge", "aaa"], 1]
-  - ["bbb", ["Hoge", "bbb"], 1]
-  - ["ccc", ["Hoge", "bbb", "ccc"], 2]
+  - name: Hoge
+    parents: ["Hoge"]
+    indent: 0
+  - name: aaa
+    parents: ["Hoge", "aaa"]
+    indent: 1
+  - name: bbb
+    parents: ["Hoge", "bbb"]
+    indent: 1
+  - name: ccc
+    parents: ["Hoge", "bbb", "ccc"]
+    indent: 2
   name: Hoge
   input: |
     openapi: 3.0.1
@@ -252,8 +308,12 @@ TEST_DATA = yaml(`
 
 - desc: primitive in array
   expect:
-  - ["Hoge", ["Hoge"], 0]
-  - ["Foo", ["Hoge", "Foo"], 1]
+  - name: Hoge
+    parents: ["Hoge"]
+    indent: 0
+  - name: Foo
+    parents: ["Hoge", "Foo"]
+    indent: 1
   name: Hoge
   input: |
     openapi: 3.0.1
@@ -272,8 +332,12 @@ TEST_DATA = yaml(`
 
 - desc: object
   expect:
-  - ["Hoge", ["Hoge"], 0]
-  - ["aaa", ["Hoge", "aaa"], 1]
+  - name: Hoge
+    parents: ["Hoge"]
+    indent: 0
+  - name: aaa
+    parents: ["Hoge", "aaa"]
+    indent: 1
   name: Hoge
   input: |
     openapi: 3.0.1
@@ -291,7 +355,9 @@ TEST_DATA = yaml(`
 
 - desc: primitive
   expect:
-  - ["Hoge", ["Hoge"], 0]
+  - name: Hoge
+    parents: ["Hoge"]
+    indent: 0
   name: Hoge
   input: |
     openapi: 3.0.1
