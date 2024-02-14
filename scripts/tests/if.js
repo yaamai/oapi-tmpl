@@ -83,7 +83,7 @@ TEST_DATA = yaml(`
     parents: ["Hoge", "bbb"]
     indent: 1
     repeated: false
-    required: false
+    required: true
   - name: EEE
     type: object
     parents: ["Hoge", "bbb", "Bar"]
@@ -118,6 +118,7 @@ TEST_DATA = yaml(`
         Foo:
           type: object
           description: BBB
+          required: [bbb]
           properties:
             aaa:
               description: CCC
@@ -367,7 +368,7 @@ TEST_DATA = yaml(`
     parents: ["Hoge", "bbb", "ccc"]
     indent: 2
     repeated: false
-    required: false
+    required: true
   name: Hoge
   input: |
     openapi: 3.0.1
@@ -386,6 +387,7 @@ TEST_DATA = yaml(`
               $ref: "#/components/schemas/Foo"
         Foo:
           type: object
+          required: [ccc]
           properties:
             ccc:
               type: string
@@ -434,6 +436,12 @@ TEST_DATA = yaml(`
     indent: 1
     repeated: false
     required: false
+  - name: bbb
+    type: string
+    parents: ["Hoge", "bbb"]
+    indent: 1
+    repeated: false
+    required: true
   name: Hoge
   input: |
     openapi: 3.0.1
@@ -445,8 +453,11 @@ TEST_DATA = yaml(`
       schemas:
         Hoge:
           type: object
+          required: [bbb]
           properties:
             aaa:
+              type: string
+            bbb:
               type: string
 
 - desc: primitive

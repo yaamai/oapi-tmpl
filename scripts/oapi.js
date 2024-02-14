@@ -59,7 +59,13 @@ function _flattenObject(name, parents, schema, indent, required) {
 
   for(let propname of Object.keys(schema.Properties).sort()) {
     const propSchema = schema.Properties[propname].Schema()
+    const prevTopIndex = output.length
     output = output.concat(flatten(propname, [...parents, name], propSchema, indent+1))
+
+    // set required flag
+    if (output.length > prevTopIndex) {
+      output[prevTopIndex].required = schema.Required.includes(propname)
+    }
   }
   return output
 }
