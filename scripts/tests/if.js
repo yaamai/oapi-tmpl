@@ -6,24 +6,28 @@ TEST_DATA = yaml(`
   expect:
   - name: Hoge
     type: object
+    desc: ""
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: IDID
     type: string
+    desc: ""
     parents: ["Hoge", "id"]
     indent: 1
     repeated: false
     required: false
   - name: aa
     type: string
+    desc: ""
     parents: ["Hoge", "a"]
     indent: 1
     repeated: false
     required: false
   - name: bb
     type: number
+    desc: ""
     parents: ["Hoge", "b"]
     indent: 1
     repeated: false
@@ -68,36 +72,42 @@ TEST_DATA = yaml(`
   expect:
   - name: AAA
     type: object
+    desc: ""
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: CCC
     type: string
+    desc: ""
     parents: ["Hoge", "aaa"]
     indent: 1
     repeated: false
     required: false
   - name: DDD
     type: array
+    desc: ""
     parents: ["Hoge", "bbb"]
     indent: 1
     repeated: false
     required: true
   - name: EEE
     type: object
+    desc: ""
     parents: ["Hoge", "bbb", "Bar"]
     indent: 2
     repeated: true
     required: false
   - name: FFF
     type: array
+    desc: ""
     parents: ["Hoge", "bbb", "Bar", "list"]
     indent: 3
     repeated: false
     required: false
   - name: GGG
     type: object
+    desc: ""
     parents: ["Hoge", "bbb", "Bar", "list", "Baz"]
     indent: 4
     repeated: true
@@ -145,12 +155,14 @@ TEST_DATA = yaml(`
   expect:
   - name: AAA
     type: object
+    desc: ""
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: CCC
     type: string
+    desc: ""
     parents: ["Hoge", "aaa"]
     indent: 1
     repeated: false
@@ -180,12 +192,14 @@ TEST_DATA = yaml(`
   expect:
   - name: Hoge
     type: object
+    desc: ""
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: aaa
     type: string
+    desc: ""
     parents: ["Hoge", "aaa"]
     indent: 1
     repeated: false
@@ -213,18 +227,21 @@ TEST_DATA = yaml(`
   expect:
   - name: Hoge
     type: object
+    desc: ""
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: aaa
     type: string
+    desc: ""
     parents: ["Hoge", "aaa"]
     indent: 1
     repeated: false
     required: false
   - name: ccc
     type: string
+    desc: ""
     parents: ["Hoge", "ccc"]
     indent: 1
     repeated: false
@@ -257,24 +274,28 @@ TEST_DATA = yaml(`
   expect:
   - name: Hoge
     type: array
+    desc: ""
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: Fuga
     type: array
+    desc: ""
     parents: ["Hoge", "Fuga"]
     indent: 1
     repeated: true
     required: false
   - name: Foo
     type: object
+    desc: ""
     parents: ["Hoge", "Fuga", "Foo"]
     indent: 2
     repeated: true
     required: false
   - name: ccc
     type: string
+    desc: ""
     parents: ["Hoge", "Fuga", "Foo", "ccc"]
     indent: 3
     repeated: false
@@ -307,18 +328,21 @@ TEST_DATA = yaml(`
   expect:
   - name: Hoge
     type: array
+    desc: ""
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: Foo
     type: object
+    desc: ""
     parents: ["Hoge", "Foo"]
     indent: 1
     repeated: true
     required: false
   - name: ccc
     type: string
+    desc: ""
     parents: ["Hoge", "Foo", "ccc"]
     indent: 2
     repeated: false
@@ -347,24 +371,28 @@ TEST_DATA = yaml(`
   expect:
   - name: Hoge
     type: object
+    desc: ""
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: aaa
     type: string
+    desc: ""
     parents: ["Hoge", "aaa"]
     indent: 1
     repeated: false
     required: false
   - name: bbb
     type: object # TODO: check this is correct or not.
+    desc: ""
     parents: ["Hoge", "bbb"]
     indent: 1
     repeated: false
     required: false
   - name: ccc
     type: string
+    desc: ""
     parents: ["Hoge", "bbb", "ccc"]
     indent: 2
     repeated: false
@@ -396,12 +424,14 @@ TEST_DATA = yaml(`
   expect:
   - name: Hoge
     type: array
+    desc: ""
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: Foo
     type: string
+    desc: ""
     parents: ["Hoge", "Foo"]
     indent: 1
     repeated: true
@@ -426,18 +456,21 @@ TEST_DATA = yaml(`
   expect:
   - name: Hoge
     type: object
+    desc: ""
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: aaa
     type: string
+    desc: ""
     parents: ["Hoge", "aaa"]
     indent: 1
     repeated: false
     required: false
   - name: bbb
     type: string
+    desc: ""
     parents: ["Hoge", "bbb"]
     indent: 1
     repeated: false
@@ -464,6 +497,7 @@ TEST_DATA = yaml(`
   expect:
   - name: Hoge
     type: string
+    desc: ""
     parents: ["Hoge"]
     indent: 0
     repeated: false

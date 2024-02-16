@@ -15,9 +15,10 @@ function getJaName(schema, name) {
 }
 
 class FlattenRow {
-  constructor(name, type, parents, indent, repeated, required) {
+  constructor(name, type, desc, parents, indent, repeated, required) {
     this.name = name
     this.type = type
+    this.desc = desc
     this.parents = parents
     this.indent = indent
     this.repeated = repeated
@@ -55,7 +56,7 @@ function _flattenAllOrOneOf(name, parents, schema, indent, target) {
 function _flattenObject(name, parents, schema, indent, required) {
   const janame = getJaName(schema, name)
   var output = []
-  output.push(new FlattenRow(janame, "object", [...parents, name], indent, false, false))
+  output.push(new FlattenRow(janame, "object", schema.Description, [...parents, name], indent, false, false))
 
   for(let propname of Object.keys(schema.Properties).sort()) {
     const propSchema = schema.Properties[propname].Schema()
@@ -75,7 +76,7 @@ function _flattenArray(name, parents, schema, indent, required) {
   const itemSchema = schema.Items.A.Schema()
 
   var output = []
-  output.push(new FlattenRow(janame, "array", [...parents, name], indent, false, false))
+  output.push(new FlattenRow(janame, "array", schema.Description, [...parents, name], indent, false, false))
 
   // TODO: check itemSchema is ref
   const itemSchemaName = getRefName(itemSchema)
@@ -101,10 +102,10 @@ function flatten(name, parents, schema, indent, required) {
     return _flattenArray(name, parents, schema, indent, required)
   } else if (type == "string") {
     const janame = getJaName(schema, name)
-    return [new FlattenRow(janame, "string", [...parents, name], indent, false, false)]
+    return [new FlattenRow(janame, "string", schema.Description, [...parents, name], indent, false, false)]
   } else if (type == "number") {
     const janame = getJaName(schema, name)
-    return [new FlattenRow(janame, "number", [...parents, name], indent, false, false)]
+    return [new FlattenRow(janame, "number", schema.Description, [...parents, name], indent, false, false)]
   } else {
     // TODO: check this codes are unreached
     return []
