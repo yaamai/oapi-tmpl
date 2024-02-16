@@ -2,32 +2,33 @@ const utils = require('./scripts/utils.js')
 const oapi = require('./scripts/oapi.js')
 
 TEST_DATA = yaml(`
+# TODO: check ref in ref
 - desc: mixed oneOf,allOf
   expect:
-  - name: Hoge
+  - name: Bobject
     type: object
-    desc: ""
+    desc: "Bobject"
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: IDID
     type: string
-    desc: ""
+    desc: "IDID"
     parents: ["Hoge", "id"]
     indent: 1
     repeated: false
     required: false
   - name: aa
     type: string
-    desc: ""
+    desc: "aa"
     parents: ["Hoge", "a"]
     indent: 1
     repeated: false
     required: false
   - name: bb
     type: number
-    desc: ""
+    desc: "bb"
     parents: ["Hoge", "b"]
     indent: 1
     repeated: false
@@ -72,42 +73,42 @@ TEST_DATA = yaml(`
   expect:
   - name: AAA
     type: object
-    desc: ""
+    desc: "BBB"
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: CCC
     type: string
-    desc: ""
+    desc: "CCC"
     parents: ["Hoge", "aaa"]
     indent: 1
     repeated: false
     required: false
   - name: DDD
     type: array
-    desc: ""
+    desc: "DDD"
     parents: ["Hoge", "bbb"]
     indent: 1
     repeated: false
     required: true
   - name: EEE
     type: object
-    desc: ""
+    desc: "EEE"
     parents: ["Hoge", "bbb", "Bar"]
     indent: 2
     repeated: true
     required: false
   - name: FFF
     type: array
-    desc: ""
+    desc: "FFF"
     parents: ["Hoge", "bbb", "Bar", "list"]
     indent: 3
     repeated: false
     required: false
   - name: GGG
     type: object
-    desc: ""
+    desc: "GGG"
     parents: ["Hoge", "bbb", "Bar", "list", "Baz"]
     indent: 4
     repeated: true
@@ -155,14 +156,14 @@ TEST_DATA = yaml(`
   expect:
   - name: AAA
     type: object
-    desc: ""
+    desc: "BBB"
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
   - name: CCC
     type: string
-    desc: ""
+    desc: "CCC"
     parents: ["Hoge", "aaa"]
     indent: 1
     repeated: false

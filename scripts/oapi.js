@@ -31,24 +31,57 @@ class FlattenRow {
 
 function _flattenAllOrOneOf(name, parents, schema, indent, target) {
   var output = []
-  var janame = ""
   for(let key of Object.keys(target)) {
 		const subSchema = target[key].Schema()
-		janame = getJaName(subSchema)
     output = output.concat(flatten(name, parents, subSchema, indent))
   }
 
-  console.log("allOf/oneOf", JSON.stringify(output))
+  // determine last janame and description
+  const lastNameObject = output.findLast((e) => (e.indent == indent && e.name) && (e.type == "object" || !e.type))
+  const lastDescObject = output.findLast((e) => (e.indent == indent && e.desc) && (e.type == "object" || !e.type))
+  const rootObjectIndex = output.findIndex(e => e.indent == indent && e.type == "object")
+  output[rootObjectIndex].name = lastNameObject.name
+  if (lastDescObject) {
+    output[rootObjectIndex].desc = lastDescObject.desc
+  }
+  // console.log("###########################", JSON.stringify(output, null, "  "))
+
+  // console.log(rootObjectIndex)
+
+  // remove duplicate object marker row
+  output = output.filter((e,idx) => idx == rootObjectIndex || e.type != "object" || e.indent != indent)
+  // remove empty janame and description schema
+  output = output.filter((e) => e.type)
+
+
+  /*
+  var janame = ""
+  var desc = ""
+  for(let key of Object.keys(target)) {
+		const subSchema = target[key].Schema()
+		if (getJaName(subSchema)) {
+      janame = getJaName(subSchema)
+    }
+    if (subSchema.Description) {
+      desc = subSchema.Description
+    }
+    output = output.concat(flatten(name, parents, subSchema, indent))
+  }
+  */
+
+  // console.log("######################", JSON.stringify(output, null, "  "))
+  // console.log("allOf/oneOf", JSON.stringify(output))
 	// remove duplicate properties
-	output = utils.uniqBy(output, (a, b) => {
-    return a.path() == b.path()
-	})
+	// output = utils.uniqBy(output, (a, b) => {
+  //   return a.path() == b.path()
+	// })
 
 	// overwrite janame to latest allOf member's janame
   // assume output[0] is object (currently supports only allOf: [object, object])
-  if (janame) {
-    output[0].name = janame
-  }
+  // TODO: add test to check [0] is correct
+  // if (janame) {
+  //   output[0].name = janame
+  // }
 
   return output
 }
@@ -90,7 +123,8 @@ function _flattenArray(name, parents, schema, indent, required) {
 }
 
 function flatten(name, parents, schema, indent, required) {
-  const type = schema.Type
+  const type = schema.Type[0]
+  // console.log("TYPE:", type)
 
   if (Object.keys(schema.AllOf).length > 0) {
     return _flattenAllOrOneOf(name, parents, schema, indent, schema.AllOf, required)
@@ -106,7 +140,13 @@ function flatten(name, parents, schema, indent, required) {
   } else if (type == "number") {
     const janame = getJaName(schema, name)
     return [new FlattenRow(janame, "number", schema.Description, [...parents, name], indent, false, false)]
+  } else if (!type && (schema.Description || schema.Extensions["x-janame"])) {
+    const janame = getJaName(schema, name)
+    return [new FlattenRow(janame, null, schema.Description, parents, indent, false, false)]
   } else {
+    console.log("################################################################################################################")
+    console.log(name, parents, JSON.stringify(schema), type)
+    console.log("################################################################################################################")
     // TODO: check this codes are unreached
     return []
   }
