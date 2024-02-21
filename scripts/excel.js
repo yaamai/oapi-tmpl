@@ -12,19 +12,19 @@ function sets(book, sheet, coords, vals) {
 function offsets(coords, axis, offset) {
   return coords.map((c) => {
     var err, col, row, coord
-		[col, row] = excel.cellNameToCoordinates(c)
+		[col, row] = excelize.cellNameToCoordinates(c)
 
     if (axis == 0) {
-			return excel.coordinatesToCellName(col+offset, row)
+			return excelize.coordinatesToCellName(col+offset, row)
     } else {
-			return excel.coordinatesToCellName(col, row+offset)
+			return excelize.coordinatesToCellName(col, row+offset)
     }
   })
 }
 
 // set cell indent
 function indent(book, sheet, coord, level) {
-  style = excel.newStyleFromCell(book, sheet, coord, {Indent: level})
+  style = excelize.newStyleFromCell(book, sheet, coord, {Indent: level})
   book.SetCellStyle(sheet, coord, coord, style)
 }
 
@@ -82,7 +82,6 @@ function getRef(schema) {
 exports.dup = dup
 exports.sets = sets
 exports.offsets = offsets
-exports.assert = assert
-exports.toSnake = toSnake
+exports.indent = indent
 exports.getRef = getRef
 exports.getJAName = getJAName

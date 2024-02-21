@@ -2,6 +2,72 @@ const utils = require('./scripts/utils.js')
 const oapi = require('./scripts/oapi.js')
 
 TEST_DATA = yaml(`
+- desc: allOf array and desc
+  expect:
+  - name: BBB
+    type: array
+    desc: "BBB"
+    parents: ["Hoge"]
+    indent: 0
+    repeated: false
+    required: false
+  - name: AAA
+    type: string
+    desc: "AAA"
+    parents: ["Hoge", "AAA"]
+    indent: 1
+    repeated: true
+    required: false
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          allOf:
+          - $ref: "#/components/schemas/Foo"
+          - description: "BBB"
+        Foo:
+          type: array
+          items:
+            type: string
+            description: "AAA"
+
+- desc: items without ref
+  expect:
+  - name: Hoge
+    type: array
+    desc: ""
+    parents: ["Hoge"]
+    indent: 0
+    repeated: false
+    required: false
+  - name: AAA
+    type: string
+    desc: ""
+    parents: ["Hoge", "AAA"]
+    indent: 1
+    repeated: true
+    required: false
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: array
+          items:
+            type: string
+            x-janame: AAA
+
 # TODO: check ref in ref
 - desc: mixed oneOf,allOf
   expect:

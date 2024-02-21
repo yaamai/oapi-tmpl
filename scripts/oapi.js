@@ -1,7 +1,11 @@
 const utils = require('./utils.js')
 
 function getRefName(schema) {
-  return schema.ParentProxy.GetReference().match(/[^\/]+$/)[0]
+  let m = schema.ParentProxy.GetReference().match(/[^\/]+$/)
+  if (!m) {
+    return null
+  }
+  return m[0]
 }
 
 function getJaName(schema, name) {
@@ -37,11 +41,14 @@ function _flattenAllOrOneOf(name, parents, schema, indent, target) {
   }
 
   // determine last janame and description
-  const lastNameObject = output.findLast((e) => (e.indent == indent && e.name) && (e.type == "object" || !e.type))
-  const lastDescObject = output.findLast((e) => (e.indent == indent && e.desc) && (e.type == "object" || !e.type))
-  const rootObjectIndex = output.findIndex(e => e.indent == indent && e.type == "object")
-  output[rootObjectIndex].name = lastNameObject.name
-  if (lastDescObject) {
+  const lastNameObject = output.findLast((e) => (e.indent == indent && e.name) && (e.type == "object" || e.type == "array" || !e.type))
+  const lastDescObject = output.findLast((e) => (e.indent == indent && e.desc) && (e.type == "object" || e.type == "array" || !e.type))
+  const rootObjectIndex = output.findIndex(e => e.indent == indent && (e.type == "object" || e.type == "array"))
+  //console.log(lastNameObject, lastDescObject, rootObjectIndex, JSON.stringify(output, null, "  "))
+  if(lastNameObject && lastNameObject.name) {
+    output[rootObjectIndex].name = lastNameObject.name
+  }
+  if (lastDescObject && lastDescObject.desc) {
     output[rootObjectIndex].desc = lastDescObject.desc
   }
   // console.log("###########################", JSON.stringify(output, null, "  "))
@@ -53,6 +60,9 @@ function _flattenAllOrOneOf(name, parents, schema, indent, target) {
   // remove empty janame and description schema
   output = output.filter((e) => e.type)
 
+	output = utils.uniqBy(output, (a, b) => {
+    return a.path() == b.path()
+	})
 
   /*
   var janame = ""
@@ -72,9 +82,6 @@ function _flattenAllOrOneOf(name, parents, schema, indent, target) {
   // console.log("######################", JSON.stringify(output, null, "  "))
   // console.log("allOf/oneOf", JSON.stringify(output))
 	// remove duplicate properties
-	// output = utils.uniqBy(output, (a, b) => {
-  //   return a.path() == b.path()
-	// })
 
 	// overwrite janame to latest allOf member's janame
   // assume output[0] is object (currently supports only allOf: [object, object])
@@ -87,6 +94,7 @@ function _flattenAllOrOneOf(name, parents, schema, indent, target) {
 }
 
 function _flattenObject(name, parents, schema, indent, required) {
+  // console.log(name, getRefName(schema), JSON.stringify(schema, null, "  "))
   const janame = getJaName(schema, name)
   var output = []
   output.push(new FlattenRow(janame, "object", schema.Description, [...parents, name], indent, false, false))
@@ -112,7 +120,7 @@ function _flattenArray(name, parents, schema, indent, required) {
   output.push(new FlattenRow(janame, "array", schema.Description, [...parents, name], indent, false, false))
 
   // TODO: check itemSchema is ref
-  const itemSchemaName = getRefName(itemSchema)
+  const itemSchemaName = getRefName(itemSchema) || getJaName(itemSchema)
   output = output.concat(flatten(itemSchemaName, [...parents, name], itemSchema, indent+1))
 
   // set repated flag to next items on array
@@ -134,12 +142,13 @@ function flatten(name, parents, schema, indent, required) {
     return _flattenObject(name, parents, schema, indent, required)
   } else if (type == "array") {
     return _flattenArray(name, parents, schema, indent, required)
-  } else if (type == "string") {
+  } else if (type == "string" || type == "number" || type == "integer" || type == "boolean") {
     const janame = getJaName(schema, name)
-    return [new FlattenRow(janame, "string", schema.Description, [...parents, name], indent, false, false)]
-  } else if (type == "number") {
-    const janame = getJaName(schema, name)
-    return [new FlattenRow(janame, "number", schema.Description, [...parents, name], indent, false, false)]
+    let desc = schema.Description
+    if (schema.Enum.length > 0) {
+      desc = "???????? + schema.Enum.join(",")
+    }
+    return [new FlattenRow(janame, type, desc, [...parents, name], indent, false, false)]
   } else if (!type && (schema.Description || schema.Extensions["x-janame"])) {
     const janame = getJaName(schema, name)
     return [new FlattenRow(janame, null, schema.Description, parents, indent, false, false)]
@@ -153,3 +162,4 @@ function flatten(name, parents, schema, indent, required) {
 }
 
 exports.flatten = flatten
+exports.getJaName = getJaName
