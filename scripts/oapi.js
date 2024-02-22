@@ -161,5 +161,33 @@ function flatten(name, parents, schema, indent, required) {
   }
 }
 
+class Context {
+	constructor() {
+  }
+}
+
+function traverse(name, schema, pre, func) {
+  // console.log(name, schema.Type, schema.AllOf.length > 0, schema.OneOf.lenght > 0)
+  if (pre) pre(schema)
+  if(schema.Type == "object") {
+    for(let propname of Object.keys(schema.Properties)) {
+      traverse(propname, schema.Properties[propname].Schema(), pre, func)
+    }
+  } else if(schema.Type == "array") {
+    traverse("[]", schema.Items.A.Schema(), pre, func)
+  } else if(schema.AllOf.length > 0) {
+    for(let subSchema of schema.AllOf) {
+      traverse("*", subSchema.Schema(), pre, func)
+    }
+  } else if(schema.OneOf.length > 0) {
+    for(let subSchema of schema.OneOf) {
+      traverse("|", subSchema.Schema(), pre, func)
+    }
+  } else {
+    if(func) func(schema)
+  }
+}
+
+
 exports.flatten = flatten
 exports.getJaName = getJaName
