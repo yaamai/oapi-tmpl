@@ -146,7 +146,7 @@ function flatten(name, parents, schema, indent, required) {
     const janame = getJaName(schema, name)
     let desc = schema.Description
     if (schema.Enum.length > 0) {
-      desc = "???????? + schema.Enum.join(",")
+      desc = "Enum:" + schema.Enum.join(",")
     }
     return [new FlattenRow(janame, type, desc, [...parents, name], indent, false, false)]
   } else if (!type && (schema.Description || schema.Extensions["x-janame"])) {
