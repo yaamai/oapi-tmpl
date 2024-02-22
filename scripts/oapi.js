@@ -162,11 +162,21 @@ function flatten(name, parents, schema, indent, required) {
 }
 
 class Context {
-	constructor() {
+	constructor(name, schema) {
+    this.name = name
+    this.schema = schema
   }
 }
 
-function traverse(name, schema, pre, func) {
+function traverse(name, schema, pre, post) {
+  let ctx = new Context(name, schema)
+
+  _traverse(ctx, pre, post)
+
+  return ctx
+}
+
+function _traverse(ctx, pre, post) {
   // console.log(name, schema.Type, schema.AllOf.length > 0, schema.OneOf.lenght > 0)
   if (pre) pre(schema)
   if(schema.Type == "object") {
@@ -191,3 +201,4 @@ function traverse(name, schema, pre, func) {
 
 exports.flatten = flatten
 exports.getJaName = getJaName
+exports.traverse = traverse
