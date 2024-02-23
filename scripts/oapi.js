@@ -162,40 +162,77 @@ function flatten(name, parents, schema, indent, required) {
 }
 
 class Context {
-	constructor(name, schema) {
+	constructor(name, schema, pre, post) {
     this.name = name
-    this.schema = schema
+    this.schemas = [schema]
+    this.pre = pre
+    this.post = post
+  }
+
+  type() {
+    return this.schema().Type[0]
+  }
+
+  schema() {
+    return this.schemas[this.schemas.length-1]
+  }
+
+  push(schema) {
+    this.schemas.push(schema)
+  }
+
+  pop(schema) {
+    this.schemas.pop()
   }
 }
 
 function traverse(name, schema, pre, post) {
-  let ctx = new Context(name, schema)
-
-  _traverse(ctx, pre, post)
-
+  let ctx = new Context(name, schema, pre, post)
+  _traverse(ctx)
   return ctx
 }
 
-function _traverse(ctx, pre, post) {
-  // console.log(name, schema.Type, schema.AllOf.length > 0, schema.OneOf.lenght > 0)
-  if (pre) pre(schema)
-  if(schema.Type == "object") {
-    for(let propname of Object.keys(schema.Properties)) {
-      traverse(propname, schema.Properties[propname].Schema(), pre, func)
+function _traverse(ctx) {
+  const schema = ctx.schema()
+  const type = ctx.type()
+  console.log(type)
+
+  // if (pre) pre(ctx)
+
+  if (type == "array") {
+    const itemSchema = schema.Items.A.Schema()
+    ctx.push(itemSchema)
+    _traverse(ctx)
+    ctx.pop(itemSchema)
+  } else if (type == "object") {
+    for(let propname of Object.keys(schema.Properties).sort()) {
+      const propSchema = schema.Properties[propname].Schema()
+      ctx.push(propSchema)
+      _traverse(ctx)
+      ctx.pop(propSchema)
     }
-  } else if(schema.Type == "array") {
-    traverse("[]", schema.Items.A.Schema(), pre, func)
-  } else if(schema.AllOf.length > 0) {
-    for(let subSchema of schema.AllOf) {
-      traverse("*", subSchema.Schema(), pre, func)
-    }
-  } else if(schema.OneOf.length > 0) {
-    for(let subSchema of schema.OneOf) {
-      traverse("|", subSchema.Schema(), pre, func)
-    }
-  } else {
-    if(func) func(schema)
   }
+
+  // if (post) post(ctx)
+  // console.log(name, schema.Type, schema.AllOf.length > 0, schema.OneOf.lenght > 0)
+//  if (pre) pre(schema)
+//  if(schema.Type == "object") {
+//    for(let propname of Object.keys(schema.Properties)) {
+//      traverse(propname, schema.Properties[propname].Schema(), pre, func)
+//    }
+//  } else if(schema.Type == "array") {
+//    traverse("[]", schema.Items.A.Schema(), pre, func)
+//  } else if(schema.AllOf.length > 0) {
+//    for(let subSchema of schema.AllOf) {
+//      traverse("*", subSchema.Schema(), pre, func)
+//    }
+//  } else if(schema.OneOf.length > 0) {
+//    for(let subSchema of schema.OneOf) {
+//      traverse("|", subSchema.Schema(), pre, func)
+//    }
+//  } else {
+//    if(func) func(schema)
+//  }
 }
 
 

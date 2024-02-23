@@ -11,7 +11,7 @@ TEST_DATA = yaml(`
     indent: 0
     repeated: false
     required: false
-  name: Hoge
+  name: Result
   input: |
     openapi: 3.0.1
     info:
@@ -20,8 +20,22 @@ TEST_DATA = yaml(`
     paths: {}
     components:
       schemas:
-        Hoge:
-          type: string
+        Result:
+          type: object
+          properties:
+            Matrix:
+              $ref: "#/components/schemas/Matrix"
+        Matrix:
+          type: array
+          items:
+            $ref: "#/components/schemas/Row"
+        Row:
+          type: object
+          properties:
+            aaa:
+              type: string
+            bbb:
+              type: number
 `)
 
 for(let test of TEST_DATA) {
