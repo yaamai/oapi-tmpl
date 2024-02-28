@@ -52,7 +52,6 @@ function _flattenAllOrOneOf(name, parents, schema, indent, target) {
     output[rootObjectIndex].desc = lastDescObject.desc
   }
   // console.log("###########################", JSON.stringify(output, null, "  "))
-
   // console.log(rootObjectIndex)
 
   // remove duplicate object marker row
@@ -63,32 +62,6 @@ function _flattenAllOrOneOf(name, parents, schema, indent, target) {
 	output = utils.uniqBy(output, (a, b) => {
     return a.path() == b.path()
 	})
-
-  /*
-  var janame = ""
-  var desc = ""
-  for(let key of Object.keys(target)) {
-		const subSchema = target[key].Schema()
-		if (getJaName(subSchema)) {
-      janame = getJaName(subSchema)
-    }
-    if (subSchema.Description) {
-      desc = subSchema.Description
-    }
-    output = output.concat(flatten(name, parents, subSchema, indent))
-  }
-  */
-
-  // console.log("######################", JSON.stringify(output, null, "  "))
-  // console.log("allOf/oneOf", JSON.stringify(output))
-	// remove duplicate properties
-
-	// overwrite janame to latest allOf member's janame
-  // assume output[0] is object (currently supports only allOf: [object, object])
-  // TODO: add test to check [0] is correct
-  // if (janame) {
-  //   output[0].name = janame
-  // }
 
   return output
 }
@@ -172,11 +145,6 @@ function* _get_nested_schemas(schema) {
   if (type == "object") {
     for(let propname of Object.keys(schema.Properties)) {
       let sub = schema.Properties[propname].Schema()
-
-      // do not overwrite ref-ed object property reference to $ref value
-      // if (!sub.ParentProxy.IsReference()) {
-      // sub.ParentProxy.GoLow().SetReference(schema.ParentProxy.GetReference() + "/" + propname)
-      // }
       yield [propname, sub]
     }
   }
