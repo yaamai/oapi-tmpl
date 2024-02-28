@@ -1,19 +1,11 @@
-const oapi = require('./scripts/oapi.js')
+const utils = require('./utils.js')
+const oapi = require('./oapi.js')
 
 class Context {
   constructor() {
     this.tables = {}
   }
 
-  ensureTable(name, altname) {
-    if (this.tables.hasOwnProperty(name)) {
-      return this.tables[name]
-    } else {
-      const table = new Table(name, altname)
-      this.tables[table.name] = table
-      return table
-    }
-  }
 }
 
 class Table {
@@ -46,4 +38,53 @@ class Foreign {
 }
 
 class OAPIToDBConverter extends oapi.Traverser {
+  constructor(name, schema) {
+    super(name, schema)
+    this.result = {}
+  }
+
+  pre() {
+    const type = this.type()
+    const parent = this.columnParent()
+
+    if(!parent) return
+
+    if (["number", "string", "integer", "boolean"].includes(type)) {
+      let tableName = utils.toSnake(oapi.getRefName(parent)) + "s"
+      let colName = this.schema().ParentProxy.GetReference().split("/").pop()
+      console.log("###", tableName)
+
+      let table = this._ensureTable(tableName, tableName)
+      table.addColumn(new Column(colName, type, null))
+    }
+
+    if (type == "object") {
+      let tableName = utils.toSnake(oapi.getRefName(parent)) + "s"
+      let columnName = this.schema().ParentProxy.GetReference().split("/").pop()
+
+      let table = this._ensureTable(tableName, tableName)
+      table.addColumn(new Column(columnName + "_id", "number", new Foreign(columnName + "_id", tableName, this.schema().ParentProxy.GetReference())))
+      console.log("REL", tableName, columnName)
+    }
+  }
+
+  columnParent() {
+    let objIndex = this.schemas.slice(0, -1).findLastIndex(s => this.type(s) == "object")
+    if (objIndex > 0 && this.type(this.schemas[objIndex-1]) == "allOf") {
+      return this.schemas[objIndex-1]
+    }
+    return this.schemas[objIndex]
+  }
+
+  _ensureTable(name, altname) {
+    if (this.result.hasOwnProperty(name)) {
+      return this.result[name]
+    } else {
+      const table = new Table(name, altname)
+      this.result[table.name] = table
+      return table
+    }
+  }
 }
+
+exports.OAPIToDBConverter = OAPIToDBConverter

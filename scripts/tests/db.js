@@ -1,4 +1,242 @@
 const utils = require('./scripts/utils.js')
+const db = require('./scripts/db.js')
+
+TEST_DATA = yaml(`
+- desc: simple object
+  expect:
+    hoges:
+      name: hoges
+      altname: hoges
+      columns:
+        aaa:
+          name: aaa
+          type: string
+          foreign: null
+        bbb:
+          name: bbb
+          type: number
+          foreign: null
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: object
+          properties:
+            aaa:
+              type: string
+            bbb:
+              type: number
+
+- desc: simple object with primitive ref
+  expect:
+    hoges:
+      name: hoges
+      altname: hoges
+      columns:
+        aaa:
+          name: aaa
+          type: string
+          foreign: null
+        bbb:
+          name: bbb
+          type: number
+          foreign: null
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: object
+          properties:
+            aaa:
+              $ref: "#/components/schemas/Foo"
+            bbb:
+              type: number
+        Foo:
+          type: string
+
+- desc: allOf object
+  expect:
+    hoges:
+      name: hoges
+      altname: hoges
+      columns:
+        aaa:
+          name: aaa
+          type: string
+          foreign: null
+        bbb:
+          name: bbb
+          type: integer
+          foreign: null
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          allOf:
+          - $ref: "#/components/schemas/Fuga"
+          - $ref: "#/components/schemas/Foo"
+        Foo:
+          type: object
+          properties:
+            aaa:
+              type: string
+        Fuga:
+          type: object
+          properties:
+            bbb:
+              type: integer
+
+- desc: object with object ref
+  expect:
+    hoges:
+      name: hoges
+      altname: hoges
+      columns:
+        aaa:
+          name: aaa
+          type: string
+          foreign: null
+        bbb:
+          name: bbb
+          type: number
+          foreign:
+            keyname: bbb
+            tablename: fugas
+            refname: Fuga
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: object
+          properties:
+            aaa:
+              type: string
+            bbb:
+              $ref: "#/components/schemas/Fuga"
+        Fuga:
+          type: object
+          properties:
+            ccc:
+              type: integer
+
+- desc: object with allOf object ref
+  expect:
+    hoges:
+      name: hoges
+      altname: hoges
+      columns:
+        aaa:
+          name: aaa
+          type: string
+          foreign: null
+        bbb:
+          name: bbb
+          type: number
+          foreign:
+            keyname: bbb
+            tablename: fugas
+            refname: Fuga
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: object
+          properties:
+            aaa:
+              type: string
+            bbb:
+              allOf:
+              - description: bbb
+              - $ref: "#/components/schemas/Fuga"
+        Fuga:
+          type: object
+          properties:
+            ccc:
+              type: integer
+
+- desc: object with allOf array ref
+  expect:
+    hoges:
+      name: hoges
+      altname: hoges
+      columns:
+        aaa:
+          name: aaa
+          type: string
+          foreign: null
+        bbb:
+          name: bbb
+          type: number
+          foreign:
+            keyname: bbb
+            tablename: fugas
+            refname: Fuga
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: object
+          properties:
+            aaa:
+              type: string
+            bbb:
+              allOf:
+              - description: bbb
+              - $ref: "#/components/schemas/Fuga"
+        Fuga:
+          type: array
+          items:
+            type: string
+`)
+
+for(let test of TEST_DATA) {
+  var [doc, err] = openapischema(test.input)
+  utils.assert(err, [])
+
+  var name = test.name
+  let converter = new db.OAPIToDBConverter(name, doc.Model.Components.Schemas[name].Schema())
+  converter.process()
+
+  utils.assert(test.expect, converter.result, test.desc)
+}
+
+/*
 const oapi = require('./scripts/oapi.js')
 
 
@@ -122,233 +360,7 @@ function schemaToTable(ctx, name, schema) {
 console.log(JSON.stringify(new Table))
 
 TEST_DATA = yaml(`
-- desc: simple object
-  expect:
-    tables:
-      hoges:
-        name: hoges
-        altname: hoges
-        columns:
-          aaa:
-            name: aaa
-            type: string
-            foreign: null
-          bbb:
-            name: bbb
-            type: number
-            foreign: null
-  name: Hoge
-  input: |
-    openapi: 3.0.1
-    info:
-      title: api
-      version: 1.0.0
-    paths: {}
-    components:
-      schemas:
-        Hoge:
-          type: object
-          properties:
-            aaa:
-              type: string
-            bbb:
-              type: number
 
-- desc: simple object with primitive ref
-  expect:
-    tables:
-      hoges:
-        name: hoges
-        altname: hoges
-        columns:
-          aaa:
-            name: aaa
-            type: string
-            foreign: null
-          bbb:
-            name: bbb
-            type: number
-            foreign: null
-  name: Hoge
-  input: |
-    openapi: 3.0.1
-    info:
-      title: api
-      version: 1.0.0
-    paths: {}
-    components:
-      schemas:
-        Hoge:
-          type: object
-          properties:
-            aaa:
-              $ref: "#/components/schemas/Foo"
-            bbb:
-              type: number
-        Foo:
-          type: string
-
-- desc: allOf object
-  expect:
-    tables:
-      hoges:
-        name: hoges
-        altname: hoges
-        columns:
-          aaa:
-            name: aaa
-            type: string
-            foreign: null
-          bbb:
-            name: bbb
-            type: integer
-            foreign: null
-  name: Hoge
-  input: |
-    openapi: 3.0.1
-    info:
-      title: api
-      version: 1.0.0
-    paths: {}
-    components:
-      schemas:
-        Hoge:
-          allOf:
-          - $ref: "#/components/schemas/Fuga"
-          - $ref: "#/components/schemas/Foo"
-        Foo:
-          type: object
-          properties:
-            aaa:
-              type: string
-        Fuga:
-          type: object
-          properties:
-            bbb:
-              type: integer
-
-- desc: object with object ref
-  expect:
-    tables:
-      hoges:
-        name: hoges
-        altname: hoges
-        columns:
-          aaa:
-            name: aaa
-            type: string
-            foreign: null
-          bbb:
-            name: bbb
-            type: number
-            foreign:
-              keyname: bbb
-              tablename: fugas
-              refname: Fuga
-  name: Hoge
-  input: |
-    openapi: 3.0.1
-    info:
-      title: api
-      version: 1.0.0
-    paths: {}
-    components:
-      schemas:
-        Hoge:
-          type: object
-          properties:
-            aaa:
-              type: string
-            bbb:
-              $ref: "#/components/schemas/Fuga"
-        Fuga:
-          type: object
-          properties:
-            ccc:
-              type: integer
-
-- desc: object with allOf object ref
-  expect:
-    tables:
-      hoges:
-        name: hoges
-        altname: hoges
-        columns:
-          aaa:
-            name: aaa
-            type: string
-            foreign: null
-          bbb:
-            name: bbb
-            type: number
-            foreign:
-              keyname: bbb
-              tablename: fugas
-              refname: Fuga
-  name: Hoge
-  input: |
-    openapi: 3.0.1
-    info:
-      title: api
-      version: 1.0.0
-    paths: {}
-    components:
-      schemas:
-        Hoge:
-          type: object
-          properties:
-            aaa:
-              type: string
-            bbb:
-              allOf:
-              - description: bbb
-              - $ref: "#/components/schemas/Fuga"
-        Fuga:
-          type: object
-          properties:
-            ccc:
-              type: integer
-
-- desc: object with allOf array ref
-  expect:
-    tables:
-      hoges:
-        name: hoges
-        altname: hoges
-        columns:
-          aaa:
-            name: aaa
-            type: string
-            foreign: null
-          bbb:
-            name: bbb
-            type: number
-            foreign:
-              keyname: bbb
-              tablename: fugas
-              refname: Fuga
-  name: Hoge
-  input: |
-    openapi: 3.0.1
-    info:
-      title: api
-      version: 1.0.0
-    paths: {}
-    components:
-      schemas:
-        Hoge:
-          type: object
-          properties:
-            aaa:
-              type: string
-            bbb:
-              allOf:
-              - description: bbb
-              - $ref: "#/components/schemas/Fuga"
-        Fuga:
-          type: array
-          items:
-            type: string
 
 - desc: primitive in array
   expect:
@@ -445,3 +457,4 @@ for(let test of TEST_DATA) {
 
   utils.assert(test.expect, ctx, test.desc)
 }
+*/

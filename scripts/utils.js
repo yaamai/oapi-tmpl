@@ -3,7 +3,9 @@ function assert(a, b, m) {
   const diff = rdiff.getDiff(a, b)
 
   if (diff.length == 0) {
-    console.log("TEST: " + (m||"").padEnd(48) + ": OK")
+    if (m) {
+      console.log("TEST: " + (m||"").padEnd(48) + ": OK")
+    }
   } else {
     console.log("TEST: " + (m||"").padEnd(48) + ": FAIL")
     console.log(JSON.stringify(a, null, "  "))

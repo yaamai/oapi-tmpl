@@ -165,12 +165,19 @@ function* _get_nested_schemas(schema) {
   const type = schema.Type[0]
 
   if (type == "array") {
-    yield schema.Items.A.Schema()
+    let sub = schema.Items.A.Schema()
+    yield sub
   }
 
   if (type == "object") {
     for(let propname of Object.keys(schema.Properties)) {
-      yield schema.Properties[propname].Schema()
+      let sub = schema.Properties[propname].Schema()
+
+      // do not overwrite ref-ed object property reference to $ref value
+      // if (!sub.ParentProxy.IsReference()) {
+      sub.ParentProxy.GoLow().SetReference(schema.ParentProxy.GetReference() + "/" + propname)
+      // }
+      yield sub
     }
   }
 
@@ -199,8 +206,7 @@ class Traverser {
 
   process() {
     const schema = this.schema()
-    console.log(schema.ParentProxy.GetReference())
-    console.log(this.path())
+    console.log("path:", this.path(), "ref:", schema.ParentProxy.GetReference())
 
     this.pre()
     for (let sub of _get_nested_schemas(schema)) {
@@ -218,8 +224,13 @@ class Traverser {
   path() {
     return this.schemas.map(_schemaType).join(".")
   }
+
+  type(s) {
+    return _schemaType(s || this.schema())
+  }
 }
 
 exports.flatten = flatten
 exports.getJaName = getJaName
+exports.getRefName = getRefName
 exports.Traverser = Traverser
