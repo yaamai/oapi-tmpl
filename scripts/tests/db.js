@@ -247,6 +247,56 @@ TEST_DATA = yaml(`
           type: array
           items:
             type: string
+
+- desc: primitive in array
+  expect:
+    hoges:
+      name: hoges
+      altname: hoges
+      columns:
+        value:
+          name: value
+          type: string
+          foreign: null
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: array
+          items:
+            type: string
+
+- desc: primitive ref in array
+  expect:
+    hoges:
+      name: hoges
+      altname: hoges
+      columns:
+        value:
+          name: value
+          type: boolean
+          foreign: null
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: array
+          items:
+            $ref: "#/components/schemas/Fuga"
+        Fuga:
+          type: boolean
 `)
 
 for(let test of TEST_DATA) {
@@ -386,65 +436,6 @@ console.log(JSON.stringify(new Table))
 TEST_DATA = yaml(`
 
 
-- desc: primitive in array
-  expect:
-    tables:
-      hoges:
-        name: hoges
-        altname: hoges
-        columns:
-          id:
-            name: id
-            type: number
-            foreign: null
-          value:
-            name: value
-            type: string
-            foreign: null
-  name: Hoge
-  input: |
-    openapi: 3.0.1
-    info:
-      title: api
-      version: 1.0.0
-    paths: {}
-    components:
-      schemas:
-        Hoge:
-          type: array
-          items:
-            type: string
-
-- desc: primitive ref in array
-  expect:
-    tables:
-      hoges:
-        name: hoges
-        altname: hoges
-        columns:
-          id:
-            name: id
-            type: number
-            foreign: null
-          value:
-            name: value
-            type: boolean
-            foreign: null
-  name: Hoge
-  input: |
-    openapi: 3.0.1
-    info:
-      title: api
-      version: 1.0.0
-    paths: {}
-    components:
-      schemas:
-        Hoge:
-          type: array
-          items:
-            $ref: "#/components/schemas/Fuga"
-        Fuga:
-          type: boolean
 
 - desc: objectt in array
   expect: {"tables":{"hoges":{"name":"hoges","altname":"","columns":{"id":{"name":"id","type":"number","foreign":null},"value":{"name":"value","type":"boolean","foreign":null}}}}}
