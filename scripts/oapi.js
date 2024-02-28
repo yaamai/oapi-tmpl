@@ -180,6 +180,12 @@ function* _get_nested_schemas(schema) {
       yield [propname, sub]
     }
   }
+
+  for (let target of [schema.AllOf, schema.OneOf]) {
+    for(let index of Object.keys(target)) {
+      yield [null, target[index].Schema()]
+    }
+  }
 }
 
 function _schemaType(s) {
@@ -203,17 +209,6 @@ class Traverser {
     const schema = this.schema()
     console.log("types:", this.types(), "paths:", this.paths.map(e => e.replace("#/components/schemas/", "")).join("."), "ref:", this.refs.map(e => e.replace("#/components/schemas/", "")).join(","))
 
-    // allOf, oneOf are treated as non-nested
-    if (Object.keys(schema.AllOf).length > 0 || Object.keys(schema.OneOf).length > 0) {
-      for (let target of [schema.AllOf, schema.OneOf]) {
-        for(let index of Object.keys(target)) {
-          this.emplace(null, target[index].Schema())
-          this.process()
-        }
-      }
-      return
-    }
-
     this.pre()
     for (let [name, sub] of _get_nested_schemas(schema)) {
       this.push(name, sub)
@@ -221,16 +216,6 @@ class Traverser {
       this.pop()
     }
     this.post()
-  }
-
-  emplace(name, sub) {
-    this.schemas[this.schemas.length-1] = sub 
-
-    let ref = this.ref()
-    if (sub.ParentProxy.IsReference()) {
-      ref = sub.ParentProxy.GetReference()
-    }
-    this.refs[this.refs.length-1] = ref
   }
 
   push(name, sub) {
