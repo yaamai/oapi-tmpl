@@ -161,81 +161,65 @@ function flatten(name, parents, schema, indent, required) {
   }
 }
 
-class Context {
-	constructor(name, schema, pre, post) {
-    this.name = name
-    this.schemas = [schema]
-    this.pre = pre
-    this.post = post
+function* _get_nested_schemas(schema) {
+  const type = schema.Type[0]
+
+  if (type == "array") {
+    yield schema.Items.A.Schema()
   }
 
-  type() {
-    return this.schema().Type[0]
+  if (type == "object") {
+    for(let propname of Object.keys(schema.Properties)) {
+      yield schema.Properties[propname].Schema()
+    }
+  }
+
+  for (let target of [schema.AllOf, schema.OneOf]) {
+    for(let index of Object.keys(target)) {
+      yield target[index].Schema()
+    }
+  }
+}
+
+function _schemaType(s) {
+  if (Object.keys(s.AllOf).length > 0) return "allOf"
+  if (Object.keys(s.OneOf).length > 0) return "oneOf"
+  if (s.Type[0]) return s.Type[0]
+}
+
+class Traverser {
+	constructor(name, schema) {
+    this.name = name
+    schema.ParentProxy.GoLow().SetReference("#/components/schemas/"+name)
+    this.schemas = [schema]
+  }
+
+  pre() {}
+  post() {}
+
+  process() {
+    const schema = this.schema()
+    console.log(schema.ParentProxy.GetReference())
+    console.log(this.path())
+
+    this.pre()
+    for (let sub of _get_nested_schemas(schema)) {
+      this.schemas.push(sub)
+      this.process()
+      this.schemas.pop()
+    }
+    this.post()
   }
 
   schema() {
     return this.schemas[this.schemas.length-1]
   }
 
-  push(schema) {
-    this.schemas.push(schema)
-  }
-
-  pop(schema) {
-    this.schemas.pop()
+  path() {
+    return this.schemas.map(_schemaType).join(".")
   }
 }
-
-function traverse(name, schema, pre, post) {
-  let ctx = new Context(name, schema, pre, post)
-  _traverse(ctx)
-  return ctx
-}
-
-function _traverse(ctx) {
-  const schema = ctx.schema()
-  const type = ctx.type()
-  console.log(type)
-
-  // if (pre) pre(ctx)
-
-  if (type == "array") {
-    const itemSchema = schema.Items.A.Schema()
-    ctx.push(itemSchema)
-    _traverse(ctx)
-    ctx.pop(itemSchema)
-  } else if (type == "object") {
-    for(let propname of Object.keys(schema.Properties).sort()) {
-      const propSchema = schema.Properties[propname].Schema()
-      ctx.push(propSchema)
-      _traverse(ctx)
-      ctx.pop(propSchema)
-    }
-  }
-
-  // if (post) post(ctx)
-  // console.log(name, schema.Type, schema.AllOf.length > 0, schema.OneOf.lenght > 0)
-//  if (pre) pre(schema)
-//  if(schema.Type == "object") {
-//    for(let propname of Object.keys(schema.Properties)) {
-//      traverse(propname, schema.Properties[propname].Schema(), pre, func)
-//    }
-//  } else if(schema.Type == "array") {
-//    traverse("[]", schema.Items.A.Schema(), pre, func)
-//  } else if(schema.AllOf.length > 0) {
-//    for(let subSchema of schema.AllOf) {
-//      traverse("*", subSchema.Schema(), pre, func)
-//    }
-//  } else if(schema.OneOf.length > 0) {
-//    for(let subSchema of schema.OneOf) {
-//      traverse("|", subSchema.Schema(), pre, func)
-//    }
-//  } else {
-//    if(func) func(schema)
-//  }
-}
-
 
 exports.flatten = flatten
 exports.getJaName = getJaName
-exports.traverse = traverse
+exports.Traverser = Traverser

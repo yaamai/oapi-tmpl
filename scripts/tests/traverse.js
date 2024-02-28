@@ -23,18 +23,59 @@ TEST_DATA = yaml(`
         Result:
           type: object
           properties:
-            Matrix:
+            matrix:
               $ref: "#/components/schemas/Matrix"
+
         Matrix:
           type: array
           items:
             $ref: "#/components/schemas/Row"
+
         Row:
           type: object
           properties:
-            aaa:
+            no:
+              type: number
+            desc:
               type: string
-            bbb:
+            figure:
+              $ref: "#/components/schemas/Figure"
+
+        Figure:
+          allOf:
+          - $ref: "#/components/schemas/FigureBase"
+          - oneOf:
+            - $ref: "#/components/schemas/Rect"
+            - $ref: "#/components/schemas/Circle"
+
+        FigureBase:
+          type: object
+          properties:
+            name:
+              type: string
+
+        Point:
+          type: object
+          properties:
+            x:
+              type: number
+            y:
+              type: number
+
+        Rect:
+          type: object
+          properties:
+            pt1:
+              $ref: "#/components/schemas/Point"
+            pt2:
+              $ref: "#/components/schemas/Point"
+
+        Circle:
+          type: object
+          properties:
+            center:
+              $ref: "#/components/schemas/Point"
+            radius:
               type: number
 `)
 
@@ -44,7 +85,8 @@ for(let test of TEST_DATA) {
 
   var name = test.name
   const schema = doc.Model.Components.Schemas[name].Schema()
-  const actual = oapi.traverse(name, schema, () => {}, () => {})
+  let traverser = new oapi.Traverser(name, schema, () => {}, () => {})
+  actual = traverser.process()
 
   utils.assert(test.expect, actual, test.desc)
 }
