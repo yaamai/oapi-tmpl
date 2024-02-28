@@ -74,10 +74,16 @@ class OAPIToDBConverter extends oapi.Traverser {
     }
   }
 
+  // determine column(object's property) parent
   columnParent() {
+    // normally, object or array are parent
     let objIndex = this.schemas.slice(0, -1).findLastIndex(s => this.type(s) == "object" || this.type(s) == "array")
-    // [?<!object.]allOf.object => return allOf
-    if ((objIndex > 0 && this.type(this.schemas[objIndex-1]) == "allOf") && (objIndex < 1 || this.type(this.schemas[objIndex-2]) != "object")) {
+
+    // check allOf
+    let isParentsParentAllOf = (objIndex > 0 && this.type(this.schemas[objIndex-1]) == "allOf")
+    let isParentsParentAllOfReference = (objIndex > 0 && this.schemas[objIndex-1].ParentProxy.IsReference())
+    let isParentsParentAllOfRoot = (objIndex-1 == 0)
+    if (isParentsParentAllOf && (isParentsParentAllOfReference || isParentsParentAllOfRoot)) {
       return [this.schemas[objIndex-1], this.paths[objIndex-1], this.refs[objIndex-1]]
     }
     return [this.schemas[objIndex], this.paths[objIndex], this.refs[objIndex]]
