@@ -127,6 +127,7 @@ func newStyleFromCell(book *excelize.File, sheet string, coord string, alignment
 
 func runTemplate(templPath string) {
 	vm := goja.New()
+  vm.Set("args", func() []string { return os.Args[2:] })
 	vm.Set("file", loadFile)
 	vm.Set("yaml", loadYaml)
 	vm.Set("jsonschema", loadJsonSchema)
