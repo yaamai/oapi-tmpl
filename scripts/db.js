@@ -71,7 +71,8 @@ class OAPIToDBConverter extends oapi.Traverser {
 
   columnParent() {
     let objIndex = this.schemas.slice(0, -1).findLastIndex(s => this.type(s) == "object")
-    if (objIndex > 0 && this.type(this.schemas[objIndex-1]) == "allOf") {
+    // [?<!object.]allOf.object => return allOf
+    if ((objIndex > 0 && this.type(this.schemas[objIndex-1]) == "allOf") && (objIndex < 1 || this.type(this.schemas[objIndex-2]) != "object")) {
       return [this.schemas[objIndex-1], this.paths[objIndex-1], this.refs[objIndex-1]]
     }
     return [this.schemas[objIndex], this.paths[objIndex], this.refs[objIndex]]
