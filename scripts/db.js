@@ -45,35 +45,36 @@ class OAPIToDBConverter extends oapi.Traverser {
 
   pre() {
     const type = this.type()
-    const parent = this.columnParent()
+    const [parent, parentPath, parentRef] = this.columnParent()
 
     if(!parent) return
 
     if (["number", "string", "integer", "boolean"].includes(type)) {
-      let tableName = utils.toSnake(oapi.getRefName(parent)) + "s"
-      let colName = this.schema().ParentProxy.GetReference().split("/").pop()
-      console.log("###", tableName)
+      let tableName = utils.toSnake(parentRef.split("/").pop()) + "s"
+      let colName = this.path()
 
       let table = this._ensureTable(tableName, tableName)
       table.addColumn(new Column(colName, type, null))
     }
 
     if (type == "object") {
-      let tableName = utils.toSnake(oapi.getRefName(parent)) + "s"
-      let columnName = this.schema().ParentProxy.GetReference().split("/").pop()
+      let tableName = utils.toSnake(parentRef.split("/").pop()) + "s"
+      // TODO: check this.path() (structual path) == toSnake(this.ref()) + "_id"
+      let colName = utils.toSnake(this.ref().split("/").pop())
 
       let table = this._ensureTable(tableName, tableName)
-      table.addColumn(new Column(columnName + "_id", "number", new Foreign(columnName + "_id", tableName, this.schema().ParentProxy.GetReference())))
-      console.log("REL", tableName, columnName)
+      table.addColumn(new Column(colName + "_id", "number", new Foreign(colName + "_id", colName + "s", this.ref())))
+      console.log("REL", parentPath, parentRef, this.path(), this.ref())
+      // console.log("REL", tableName, columnName)
     }
   }
 
   columnParent() {
     let objIndex = this.schemas.slice(0, -1).findLastIndex(s => this.type(s) == "object")
     if (objIndex > 0 && this.type(this.schemas[objIndex-1]) == "allOf") {
-      return this.schemas[objIndex-1]
+      return [this.schemas[objIndex-1], this.paths[objIndex-1], this.refs[objIndex-1]]
     }
-    return this.schemas[objIndex]
+    return [this.schemas[objIndex], this.paths[objIndex], this.refs[objIndex]]
   }
 
   _ensureTable(name, altname) {

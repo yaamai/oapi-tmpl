@@ -166,7 +166,7 @@ function* _get_nested_schemas(schema) {
 
   if (type == "array") {
     let sub = schema.Items.A.Schema()
-    yield sub
+    yield [null, sub]
   }
 
   if (type == "object") {
@@ -175,15 +175,15 @@ function* _get_nested_schemas(schema) {
 
       // do not overwrite ref-ed object property reference to $ref value
       // if (!sub.ParentProxy.IsReference()) {
-      sub.ParentProxy.GoLow().SetReference(schema.ParentProxy.GetReference() + "/" + propname)
+      // sub.ParentProxy.GoLow().SetReference(schema.ParentProxy.GetReference() + "/" + propname)
       // }
-      yield sub
+      yield [propname, sub]
     }
   }
 
   for (let target of [schema.AllOf, schema.OneOf]) {
     for(let index of Object.keys(target)) {
-      yield target[index].Schema()
+      yield [null, target[index].Schema()]
     }
   }
 }
@@ -197,8 +197,9 @@ function _schemaType(s) {
 class Traverser {
 	constructor(name, schema) {
     this.name = name
-    schema.ParentProxy.GoLow().SetReference("#/components/schemas/"+name)
     this.schemas = [schema]
+    this.paths = ["#/components/schemas/"+name]
+    this.refs = ["#/components/schemas/"+name]
   }
 
   pre() {}
@@ -206,15 +207,37 @@ class Traverser {
 
   process() {
     const schema = this.schema()
-    console.log("path:", this.path(), "ref:", schema.ParentProxy.GetReference())
+    console.log("types:", this.types(), "paths:", this.paths.map(e => e.replace("#/components/schemas/", "")).join("."), "ref:", this.refs.map(e => e.replace("#/components/schemas/", "")).join(","))
 
     this.pre()
-    for (let sub of _get_nested_schemas(schema)) {
-      this.schemas.push(sub)
+    for (let [name, sub] of _get_nested_schemas(schema)) {
+      this.push(name, sub)
       this.process()
-      this.schemas.pop()
+      this.pop()
     }
     this.post()
+  }
+
+  push(name, sub) {
+    let path = this.path()
+    if (name) {
+      path = name
+    }
+
+    let ref = this.ref()
+    if (sub.ParentProxy.IsReference()) {
+      ref = sub.ParentProxy.GetReference()
+    }
+
+    this.schemas.push(sub)
+    this.paths.push(path)
+    this.refs.push(ref)
+  }
+
+  pop() {
+    this.schemas.pop()
+    this.paths.pop()
+    this.refs.pop()
   }
 
   schema() {
@@ -222,6 +245,14 @@ class Traverser {
   }
 
   path() {
+    return this.paths[this.paths.length-1]
+  }
+
+  ref() {
+    return this.refs[this.refs.length-1]
+  }
+
+  types() {
     return this.schemas.map(_schemaType).join(".")
   }
 
