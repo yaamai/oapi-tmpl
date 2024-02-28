@@ -219,7 +219,7 @@ class Traverser {
   }
 
   push(name, sub) {
-    let path = this.path()
+    let path = ""
     if (name) {
       path = name
     }

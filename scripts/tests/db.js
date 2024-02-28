@@ -210,13 +210,21 @@ TEST_DATA = yaml(`
           name: aaa
           type: string
           foreign: null
-        bbb:
-          name: bbb
+        fuga_id:
+          name: fuga_id
           type: number
           foreign:
-            keyname: bbb
+            keyname: fuga_id
             tablename: fugas
-            refname: Fuga
+            refname: "#/components/schemas/Fuga"
+    fugas:
+      name: "fugas"
+      altname: "fugas"
+      columns:
+        value:
+          name: "value"
+          type: "string"
+          foreign: null
   name: Hoge
   input: |
     openapi: 3.0.1
