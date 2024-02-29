@@ -175,7 +175,7 @@ class Traverser {
 
   process() {
     const schema = this.schema()
-    console.log("types:", this.types(), "paths:", this.paths.map(e => e.replace("#/components/schemas/", "")).join("."), "ref:", this.refs.map(e => e.replace("#/components/schemas/", "")).join(","))
+    // console.log("types:", this.types(), "paths:", this.paths.map(e => e.replace("#/components/schemas/", "")).join("."), "ref:", this.refs.map(e => e.replace("#/components/schemas/", "")).join(","))
 
     this.pre()
     for (let [name, sub] of _get_nested_schemas(schema)) {

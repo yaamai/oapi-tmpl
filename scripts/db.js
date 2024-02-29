@@ -50,6 +50,7 @@ class OAPIToDBConverter extends oapi.Traverser {
     if (["number", "string", "integer", "boolean"].includes(type)) {
       const [parent, parentPath, parentRef] = this.columnParent()
       let tableName = utils.toSnake(parentRef.split("/").pop()) + "s"
+      let tableAltName = oapi.getJaName(parent, tableName)
       let colName = this.path()
 
       // when primitive type in array, colName == ""
@@ -57,7 +58,7 @@ class OAPIToDBConverter extends oapi.Traverser {
         colName = "value"
       }
 
-      let table = this._ensureTable(tableName, tableName)
+      let table = this._ensureTable(tableName, tableAltName)
       table.addColumn(new Column(colName, type, null))
     }
 
@@ -65,19 +66,21 @@ class OAPIToDBConverter extends oapi.Traverser {
       const [parent, parentPath, parentRef] = this.relationParent()
       if(!parent) return
       let tableName = utils.toSnake(parentRef.split("/").pop()) + "s"
+      let tableAltName = oapi.getJaName(parent, tableName)
       // TODO: check this.path() (structual path) == toSnake(this.ref()) + "_id"
       let refName = utils.toSnake(this.ref().split("/").pop())
+      let refAltName = oapi.getJaName(this.schema(), refName + "s")
       let colName = refName + "_id"
       if (this.path() && refName != this.path()) {
         colName = this.path() + "_" + colName
       }
 
-      let table = this._ensureTable(tableName, tableName)
+      let table = this._ensureTable(tableName, tableAltName)
       table.addColumn(new Column(colName, "number", new Foreign(colName, refName + "s", this.ref())))
 
-      let refTable = this._ensureTable(refName + "s", refName + "s")
+      let refTable = this._ensureTable(refName + "s", refAltName)
       refTable.addColumn(new Column("id", "number", null))
-      console.log("REL", parentPath, parentRef, this.path(), this.ref())
+      // console.log("REL", parentPath, parentRef, this.path(), this.ref())
       // console.log("REL", tableName, columnName)
     }
   }
@@ -100,7 +103,7 @@ class OAPIToDBConverter extends oapi.Traverser {
     //   console.log("column is allof sibling parent:", objIndex-1)
     //   return [this.schemas[objIndex-1], this.paths[objIndex-1], this.refs[objIndex-1]]
     // }
-    console.log("parent:", objIndex)
+    // console.log("parent:", objIndex)
     return [this.schemas[objIndex], this.paths[objIndex], this.refs[objIndex]]
   }
 

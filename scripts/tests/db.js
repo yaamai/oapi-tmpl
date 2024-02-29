@@ -407,7 +407,7 @@ TEST_DATA = yaml(`
             refname: "#/components/schemas/Matrix"
     matrixs:
       name: matrixs
-      altname: matrixs
+      altname: mat
       columns:
         id:
           name: id
@@ -558,6 +558,7 @@ TEST_DATA = yaml(`
 
         Matrix:
           type: array
+          description: mat
           items:
             $ref: "#/components/schemas/Row"
 
