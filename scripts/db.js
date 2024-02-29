@@ -74,6 +74,9 @@ class OAPIToDBConverter extends oapi.Traverser {
 
       let table = this._ensureTable(tableName, tableName)
       table.addColumn(new Column(colName, "number", new Foreign(colName, refName + "s", this.ref())))
+
+      let refTable = this._ensureTable(refName + "s", refName + "s")
+      refTable.addColumn(new Column("id", "number"))
       console.log("REL", parentPath, parentRef, this.path(), this.ref())
       // console.log("REL", tableName, columnName)
     }
