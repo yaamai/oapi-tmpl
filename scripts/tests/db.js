@@ -136,11 +136,11 @@ TEST_DATA = yaml(`
           name: aaa
           type: string
           foreign: null
-        fuga_id:
-          name: fuga_id
+        bbb_fuga_id:
+          name: bbb_fuga_id
           type: number
           foreign:
-            keyname: fuga_id
+            keyname: bbb_fuga_id
             tablename: fugas
             refname: "#/components/schemas/Fuga"
     fugas:
@@ -368,13 +368,121 @@ TEST_DATA = yaml(`
 
 - desc: primitive
   expect:
-  - name: Hoge
-    type: string
-    desc: ""
-    parents: ["Hoge"]
-    indent: 0
-    repeated: false
-    required: false
+    results:
+      name: results
+      altname: results
+      columns:
+        matrix_id:
+          name: matrix_id
+          type: number
+          foreign:
+            keyname: matrix_id
+            tablename: matrixs
+            refname: "#/components/schemas/Matrix"
+    matrixs:
+      name: matrixs
+      altname: matrixs
+      columns:
+        row_id:
+          name: row_id
+          type: number
+          foreign:
+            keyname: row_id
+            tablename: rows
+            refname: "#/components/schemas/Row"
+    rows:
+      name: rows
+      altname: rows
+      columns:
+        'no':
+          name: 'no'
+          type: number
+          foreign: 
+        desc:
+          name: desc
+          type: string
+          foreign: 
+        figure_id:
+          name: figure_id
+          type: number
+          foreign:
+            keyname: figure_id
+            tablename: figures
+            refname: "#/components/schemas/Figure"
+    figures:
+      name: figures
+      altname: figures
+      columns:
+        figure_base_id:
+          name: figure_base_id
+          type: number
+          foreign:
+            keyname: figure_base_id
+            tablename: figure_bases
+            refname: "#/components/schemas/FigureBase"
+        name:
+          name: name
+          type: string
+          foreign: 
+        rect_id:
+          name: rect_id
+          type: number
+          foreign:
+            keyname: rect_id
+            tablename: rects
+            refname: "#/components/schemas/Rect"
+        circle_id:
+          name: circle_id
+          type: number
+          foreign:
+            keyname: circle_id
+            tablename: circles
+            refname: "#/components/schemas/Circle"
+    rects:
+      name: rects
+      altname: rects
+      columns:
+        a_point_id:
+          name: a_point_id
+          type: number
+          foreign:
+            keyname: a_point_id
+            tablename: points
+            refname: "#/components/schemas/Point"
+        b_point_id:
+          name: b_point_id
+          type: number
+          foreign:
+            keyname: b_point_id
+            tablename: points
+            refname: "#/components/schemas/Point"
+    points:
+      name: points
+      altname: points
+      columns:
+        y:
+          name: y
+          type: number
+          foreign: 
+        x:
+          name: x
+          type: number
+          foreign: 
+    circles:
+      name: circles
+      altname: circles
+      columns:
+        radius:
+          name: radius
+          type: number
+          foreign: 
+        center_point_id:
+          name: center_point_id
+          type: number
+          foreign:
+            keyname: center_point_id
+            tablename: points
+            refname: "#/components/schemas/Point"
   name: Result
   input: |
     openapi: 3.0.1
@@ -429,9 +537,9 @@ TEST_DATA = yaml(`
         Rect:
           type: object
           properties:
-            pt1:
+            a:
               $ref: "#/components/schemas/Point"
-            pt2:
+            b:
               $ref: "#/components/schemas/Point"
 
         Circle:

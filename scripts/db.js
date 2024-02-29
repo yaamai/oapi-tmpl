@@ -66,10 +66,14 @@ class OAPIToDBConverter extends oapi.Traverser {
       if(!parent) return
       let tableName = utils.toSnake(parentRef.split("/").pop()) + "s"
       // TODO: check this.path() (structual path) == toSnake(this.ref()) + "_id"
-      let colName = utils.toSnake(this.ref().split("/").pop())
+      let refName = utils.toSnake(this.ref().split("/").pop())
+      let colName = refName + "_id"
+      if (this.path() && refName != this.path()) {
+        colName = this.path() + "_" + colName
+      }
 
       let table = this._ensureTable(tableName, tableName)
-      table.addColumn(new Column(colName + "_id", "number", new Foreign(colName + "_id", colName + "s", this.ref())))
+      table.addColumn(new Column(colName, "number", new Foreign(colName, refName + "s", this.ref())))
       console.log("REL", parentPath, parentRef, this.path(), this.ref())
       // console.log("REL", tableName, columnName)
     }
