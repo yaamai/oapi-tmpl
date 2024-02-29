@@ -45,11 +45,10 @@ class OAPIToDBConverter extends oapi.Traverser {
 
   pre() {
     const type = this.type()
-    const [parent, parentPath, parentRef] = this.columnParent()
 
-    if(!parent) return
 
     if (["number", "string", "integer", "boolean"].includes(type)) {
+      const [parent, parentPath, parentRef] = this.columnParent()
       let tableName = utils.toSnake(parentRef.split("/").pop()) + "s"
       let colName = this.path()
 
@@ -62,7 +61,9 @@ class OAPIToDBConverter extends oapi.Traverser {
       table.addColumn(new Column(colName, type, null))
     }
 
-    if (type == "object" || type == "array") {
+    if (type == "object" || type == "array" || (type == "allOf" && this.schema().ParentProxy.IsReference())) {
+      const [parent, parentPath, parentRef] = this.relationParent()
+      if(!parent) return
       let tableName = utils.toSnake(parentRef.split("/").pop()) + "s"
       // TODO: check this.path() (structual path) == toSnake(this.ref()) + "_id"
       let colName = utils.toSnake(this.ref().split("/").pop())
@@ -74,6 +75,11 @@ class OAPIToDBConverter extends oapi.Traverser {
     }
   }
 
+  relationParent() {
+    let objIndex = this.schemas.slice(0, -1).findLastIndex(s => this.type(s) == "object" || this.type(s) == "array" || this.type(s) == "allOf")
+    return [this.schemas[objIndex], this.paths[objIndex], this.refs[objIndex]]
+  }
+
   // determine column(object's property) parent
   columnParent() {
     // normally, object or array are parent
@@ -82,10 +88,12 @@ class OAPIToDBConverter extends oapi.Traverser {
     // check allOf
     let isParentsParentAllOf = (objIndex > 0 && this.type(this.schemas[objIndex-1]) == "allOf")
     let isParentsParentAllOfReference = (objIndex > 0 && this.schemas[objIndex-1].ParentProxy.IsReference())
-    let isParentsParentAllOfRoot = (objIndex-1 == 0)
-    if (isParentsParentAllOf && (isParentsParentAllOfReference || isParentsParentAllOfRoot)) {
+    // let isParentsParentAllOfRoot = (objIndex-1 == 0)
+    if (isParentsParentAllOf && (isParentsParentAllOfReference)) {
+      console.log("parent:", objIndex-1)
       return [this.schemas[objIndex-1], this.paths[objIndex-1], this.refs[objIndex-1]]
     }
+    console.log("parent:", objIndex)
     return [this.schemas[objIndex], this.paths[objIndex], this.refs[objIndex]]
   }
 
@@ -99,5 +107,6 @@ class OAPIToDBConverter extends oapi.Traverser {
     }
   }
 }
+
 
 exports.OAPIToDBConverter = OAPIToDBConverter

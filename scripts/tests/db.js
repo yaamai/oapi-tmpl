@@ -72,10 +72,32 @@ TEST_DATA = yaml(`
       name: hoges
       altname: hoges
       columns:
+        fuga_id:
+          name: fuga_id
+          type: number
+          foreign:
+            keyname: fuga_id
+            tablename: fugas
+            refname: "#/components/schemas/Fuga"
+        foo_id:
+          name: foo_id
+          type: number
+          foreign:
+            keyname: foo_id
+            tablename: foos
+            refname: "#/components/schemas/Foo"
+    foos:
+      name: foos
+      altname: foos
+      columns:
         aaa:
           name: aaa
           type: string
           foreign: null
+    fugas:
+      name: fugas
+      altname: fugas
+      columns:
         bbb:
           name: bbb
           type: integer
