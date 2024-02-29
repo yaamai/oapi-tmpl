@@ -628,9 +628,9 @@ TEST_DATA = yaml(`
           foreign:
         radius:
           name: radius
-          altname: radius
+          altname: aa
           type: number
-          desc: ""
+          desc: "aa"
           foreign: 
         center_point_id:
           name: center_point_id
@@ -698,6 +698,7 @@ TEST_DATA = yaml(`
           properties:
             a:
               $ref: "#/components/schemas/Point"
+              # TODO: make this to allOf with description
             b:
               $ref: "#/components/schemas/Point"
 
@@ -708,6 +709,7 @@ TEST_DATA = yaml(`
               $ref: "#/components/schemas/Point"
             radius:
               type: number
+              description: aa
 `)
 
 for(let test of TEST_DATA) {
