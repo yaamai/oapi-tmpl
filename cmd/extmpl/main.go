@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/dop251/goja"
 	"github.com/dop251/goja_nodejs/console"
 	"github.com/dop251/goja_nodejs/require"
@@ -127,7 +128,8 @@ func newStyleFromCell(book *excelize.File, sheet string, coord string, alignment
 
 func runTemplate(templPath string) {
 	vm := goja.New()
-  vm.Set("args", func() []string { return os.Args[2:] })
+	vm.Set("args", func() []string { return os.Args[2:] })
+	vm.Set("print", fmt.Print)
 	vm.Set("file", loadFile)
 	vm.Set("yaml", loadYaml)
 	vm.Set("jsonschema", loadJsonSchema)
@@ -155,9 +157,9 @@ func runTemplate(templPath string) {
 }
 
 func main() {
-    if len(os.Args) < 1 {
-        return
-    }
+	if len(os.Args) < 1 {
+		return
+	}
 	templPath := os.Args[1]
 	runTemplate(templPath)
 }
