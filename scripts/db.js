@@ -54,14 +54,16 @@ class OAPIToDBConverter extends oapi.Traverser {
       let tableName = utils.toSnake(parentRef.split("/").pop()) + "s"
       let tableAltName = oapi.getJaName(parent, tableName)
       let colName = this.path()
+      let colDesc = this.schema().Description
 
       // when primitive type in array, colName == ""
       if (!colName) {
         colName = "value"
       }
+      let colAltName = oapi.getJaName(this.schema(), colName)
 
       let table = this._ensureTable(tableName, tableAltName)
-      table.addColumn(new Column(colName, type, colName, null, null))
+      table.addColumn(new Column(colName, type, colAltName, colDesc, null))
     }
 
     if (type == "object" || type == "array" || (type == "allOf" && this.schema().ParentProxy.IsReference())) {
@@ -78,10 +80,10 @@ class OAPIToDBConverter extends oapi.Traverser {
       }
 
       let table = this._ensureTable(tableName, tableAltName)
-      table.addColumn(new Column(colName, "number", colName, null, new Foreign(colName, refName + "s", this.ref())))
+      table.addColumn(new Column(colName, "number", colName, "", new Foreign(colName, refName + "s", this.ref())))
 
       let refTable = this._ensureTable(refName + "s", refAltName)
-      refTable.addColumn(new Column("id", "number", "id", null, null))
+      refTable.addColumn(new Column("id", "number", "id", "", null))
       // console.log("REL", parentPath, parentRef, this.path(), this.ref())
       // console.log("REL", tableName, columnName)
     }

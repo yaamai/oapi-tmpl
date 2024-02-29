@@ -12,13 +12,13 @@ TEST_DATA = yaml(`
           name: aaa
           altname: aaa
           type: string
-          desc: null
+          desc: ""
           foreign: null
         bbb:
           name: bbb
           altname: bbb
           type: number
-          desc: null
+          desc: ""
           foreign: null
   name: Hoge
   input: |
@@ -49,13 +49,13 @@ TEST_DATA = yaml(`
           name: aaa
           altname: aaa
           type: string
-          desc: null
+          desc: ""
           foreign: null
         bbb:
           name: bbb
           altname: bbb
           type: number
-          desc: null
+          desc: ""
           foreign: null
   name: Hoge
   input: |
@@ -86,7 +86,7 @@ TEST_DATA = yaml(`
           name: fuga_id
           altname: fuga_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: fuga_id
             tablename: fugas
@@ -95,7 +95,7 @@ TEST_DATA = yaml(`
           name: foo_id
           altname: foo_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: foo_id
             tablename: foos
@@ -108,13 +108,13 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         aaa:
           name: aaa
           altname: aaa
           type: string
-          desc: null
+          desc: ""
           foreign: null
     fugas:
       name: fugas
@@ -124,13 +124,13 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         bbb:
           name: bbb
           altname: bbb
           type: integer
-          desc: null
+          desc: ""
           foreign: null
   name: Hoge
   input: |
@@ -166,13 +166,13 @@ TEST_DATA = yaml(`
           name: aaa
           altname: aaa
           type: string
-          desc: null
+          desc: ""
           foreign: null
         bbb_fuga_id:
           name: bbb_fuga_id
           altname: bbb_fuga_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: bbb_fuga_id
             tablename: fugas
@@ -185,13 +185,13 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         ccc:
           name: "ccc"
           altname: "ccc"
           type: "integer"
-          desc: null
+          desc: ""
           foreign: null
   name: Hoge
   input: |
@@ -225,13 +225,13 @@ TEST_DATA = yaml(`
           name: aaa
           altname: aaa
           type: string
-          desc: null
+          desc: ""
           foreign: null
         fuga_id:
           name: fuga_id
           altname: fuga_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: fuga_id
             tablename: fugas
@@ -244,13 +244,13 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         ccc:
           name: "ccc"
           altname: "ccc"
           type: "integer"
-          desc: null
+          desc: ""
           foreign: null
   name: Hoge
   input: |
@@ -286,13 +286,13 @@ TEST_DATA = yaml(`
           name: aaa
           altname: aaa
           type: string
-          desc: null
+          desc: ""
           foreign: null
         fuga_id:
           name: fuga_id
           altname: fuga_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: fuga_id
             tablename: fugas
@@ -305,13 +305,13 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         value:
           name: "value"
           altname: "value"
           type: "string"
-          desc: null
+          desc: ""
           foreign: null
   name: Hoge
   input: |
@@ -346,7 +346,7 @@ TEST_DATA = yaml(`
           name: value
           altname: value
           type: string
-          desc: null
+          desc: ""
           foreign: null
   name: Hoge
   input: |
@@ -372,7 +372,7 @@ TEST_DATA = yaml(`
           name: value
           altname: value
           type: boolean
-          desc: null
+          desc: ""
           foreign: null
   name: Hoge
   input: |
@@ -400,7 +400,7 @@ TEST_DATA = yaml(`
           name: fuga_id
           altname: fuga_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: fuga_id
             tablename: fugas
@@ -413,19 +413,19 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         aaa:
           name: "aaa"
           altname: "aaa"
           type: "string"
-          desc: null
+          desc: ""
           foreign: null
         bbb:
           name: "bbb"
           altname: "bbb"
           type: "string"
-          desc: null
+          desc: ""
           foreign: null
   name: Hoge
   input: |
@@ -458,7 +458,7 @@ TEST_DATA = yaml(`
           name: matrix_id
           altname: matrix_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: matrix_id
             tablename: matrixs
@@ -471,13 +471,13 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         row_id:
           name: row_id
           altname: row_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: row_id
             tablename: rows
@@ -490,25 +490,25 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         'no':
           name: 'no'
           altname: 'no'
           type: number
-          desc: null
+          desc: ""
           foreign: 
         desc:
           name: desc
           altname: desc
           type: string
-          desc: null
+          desc: ""
           foreign: 
         figure_id:
           name: figure_id
           altname: figure_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: figure_id
             tablename: figures
@@ -521,13 +521,13 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         figure_base_id:
           name: figure_base_id
           altname: figure_base_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: figure_base_id
             tablename: figure_bases
@@ -536,7 +536,7 @@ TEST_DATA = yaml(`
           name: rect_id
           altname: rect_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: rect_id
             tablename: rects
@@ -545,7 +545,7 @@ TEST_DATA = yaml(`
           name: circle_id
           altname: circle_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: circle_id
             tablename: circles
@@ -558,13 +558,13 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         name:
           name: name
           altname: name
           type: string
-          desc: null
+          desc: ""
           foreign: 
     rects:
       name: rects
@@ -574,13 +574,13 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         a_point_id:
           name: a_point_id
           altname: a_point_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: a_point_id
             tablename: points
@@ -589,7 +589,7 @@ TEST_DATA = yaml(`
           name: b_point_id
           altname: b_point_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: b_point_id
             tablename: points
@@ -602,19 +602,19 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         y:
           name: y
           altname: y
           type: number
-          desc: null
+          desc: ""
           foreign: 
         x:
           name: x
           altname: x
           type: number
-          desc: null
+          desc: ""
           foreign: 
     circles:
       name: circles
@@ -624,19 +624,19 @@ TEST_DATA = yaml(`
           name: id
           altname: id
           type: number
-          desc: null
+          desc: ""
           foreign:
         radius:
           name: radius
           altname: radius
           type: number
-          desc: null
+          desc: ""
           foreign: 
         center_point_id:
           name: center_point_id
           altname: center_point_id
           type: number
-          desc: null
+          desc: ""
           foreign:
             keyname: center_point_id
             tablename: points
