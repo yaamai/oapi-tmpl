@@ -21,8 +21,10 @@ class Table {
 }
 
 class Column {
-  constructor(name, type, foreign) {
+  constructor(name, type, altname, desc, foreign) {
     this.name = name
+    this.altname = altname
+    this.desc = desc
     this.type = type
     this.foreign = foreign
   }
@@ -59,7 +61,7 @@ class OAPIToDBConverter extends oapi.Traverser {
       }
 
       let table = this._ensureTable(tableName, tableAltName)
-      table.addColumn(new Column(colName, type, null))
+      table.addColumn(new Column(colName, type, colName, null, null))
     }
 
     if (type == "object" || type == "array" || (type == "allOf" && this.schema().ParentProxy.IsReference())) {
@@ -76,10 +78,10 @@ class OAPIToDBConverter extends oapi.Traverser {
       }
 
       let table = this._ensureTable(tableName, tableAltName)
-      table.addColumn(new Column(colName, "number", new Foreign(colName, refName + "s", this.ref())))
+      table.addColumn(new Column(colName, "number", colName, null, new Foreign(colName, refName + "s", this.ref())))
 
       let refTable = this._ensureTable(refName + "s", refAltName)
-      refTable.addColumn(new Column("id", "number", null))
+      refTable.addColumn(new Column("id", "number", "id", null, null))
       // console.log("REL", parentPath, parentRef, this.path(), this.ref())
       // console.log("REL", tableName, columnName)
     }
