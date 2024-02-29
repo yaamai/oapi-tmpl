@@ -6,7 +6,7 @@ TEST_DATA = yaml(`
   expect:
     hoges:
       name: hoges
-      altname: hoges
+      altname: aa
       columns:
         aaa:
           name: aaa
@@ -27,6 +27,8 @@ TEST_DATA = yaml(`
       schemas:
         Hoge:
           type: object
+          description: a
+          x-janame: aa
           properties:
             aaa:
               type: string
@@ -90,6 +92,10 @@ TEST_DATA = yaml(`
       name: foos
       altname: foos
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         aaa:
           name: aaa
           type: string
@@ -98,6 +104,10 @@ TEST_DATA = yaml(`
       name: fugas
       altname: fugas
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         bbb:
           name: bbb
           type: integer
@@ -147,6 +157,10 @@ TEST_DATA = yaml(`
       name: "fugas"
       altname: "fugas"
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         ccc:
           name: "ccc"
           type: "integer"
@@ -194,6 +208,10 @@ TEST_DATA = yaml(`
       name: "fugas"
       altname: "fugas"
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         ccc:
           name: "ccc"
           type: "integer"
@@ -243,6 +261,10 @@ TEST_DATA = yaml(`
       name: "fugas"
       altname: "fugas"
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         value:
           name: "value"
           type: "string"
@@ -320,7 +342,7 @@ TEST_DATA = yaml(`
         Fuga:
           type: boolean
 
-- desc: objectt in array
+- desc: object in array
   expect:
     hoges:
       name: hoges
@@ -337,6 +359,10 @@ TEST_DATA = yaml(`
       name: "fugas"
       altname: "fugas"
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         aaa:
           name: "aaa"
           type: "string"
@@ -383,6 +409,10 @@ TEST_DATA = yaml(`
       name: matrixs
       altname: matrixs
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         row_id:
           name: row_id
           type: number
@@ -394,6 +424,10 @@ TEST_DATA = yaml(`
       name: rows
       altname: rows
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         'no':
           name: 'no'
           type: number
@@ -413,6 +447,10 @@ TEST_DATA = yaml(`
       name: figures
       altname: figures
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         figure_base_id:
           name: figure_base_id
           type: number
@@ -438,6 +476,10 @@ TEST_DATA = yaml(`
       name: figure_bases
       altname: figure_bases
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         name:
           name: name
           type: string
@@ -446,6 +488,10 @@ TEST_DATA = yaml(`
       name: rects
       altname: rects
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         a_point_id:
           name: a_point_id
           type: number
@@ -464,6 +510,10 @@ TEST_DATA = yaml(`
       name: points
       altname: points
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         y:
           name: y
           type: number
@@ -476,6 +526,10 @@ TEST_DATA = yaml(`
       name: circles
       altname: circles
       columns:
+        id:
+          name: id
+          type: number
+          foreign:
         radius:
           name: radius
           type: number
