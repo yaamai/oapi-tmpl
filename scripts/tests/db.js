@@ -420,10 +420,6 @@ TEST_DATA = yaml(`
             keyname: figure_base_id
             tablename: figure_bases
             refname: "#/components/schemas/FigureBase"
-        name:
-          name: name
-          type: string
-          foreign: 
         rect_id:
           name: rect_id
           type: number
@@ -438,6 +434,14 @@ TEST_DATA = yaml(`
             keyname: circle_id
             tablename: circles
             refname: "#/components/schemas/Circle"
+    figure_bases:
+      name: figure_bases
+      altname: figure_bases
+      columns:
+        name:
+          name: name
+          type: string
+          foreign: 
     rects:
       name: rects
       altname: rects

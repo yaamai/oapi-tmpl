@@ -93,10 +93,10 @@ class OAPIToDBConverter extends oapi.Traverser {
     let isParentsParentAllOf = (objIndex > 0 && this.type(this.schemas[objIndex-1]) == "allOf")
     let isParentsParentAllOfReference = (objIndex > 0 && this.schemas[objIndex-1].ParentProxy.IsReference())
     // let isParentsParentAllOfRoot = (objIndex-1 == 0)
-    if (isParentsParentAllOf && (isParentsParentAllOfReference)) {
-      console.log("parent:", objIndex-1)
-      return [this.schemas[objIndex-1], this.paths[objIndex-1], this.refs[objIndex-1]]
-    }
+    // if (isParentsParentAllOf && (isParentsParentAllOfReference)) {
+    //   console.log("column is allof sibling parent:", objIndex-1)
+    //   return [this.schemas[objIndex-1], this.paths[objIndex-1], this.refs[objIndex-1]]
+    // }
     console.log("parent:", objIndex)
     return [this.schemas[objIndex], this.paths[objIndex], this.refs[objIndex]]
   }
