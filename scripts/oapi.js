@@ -44,11 +44,11 @@ function _flattenAllOrOneOf(name, parents, schema, indent, target) {
   const lastNameObject = output.findLast((e) => (e.indent == indent && e.name) && (e.type == "object" || e.type == "array" || !e.type))
   const lastDescObject = output.findLast((e) => (e.indent == indent && e.desc) && (e.type == "object" || e.type == "array" || !e.type))
   const rootObjectIndex = output.findIndex(e => e.indent == indent && (e.type == "object" || e.type == "array"))
-  //console.log(lastNameObject, lastDescObject, rootObjectIndex, JSON.stringify(output, null, "  "))
-  if(lastNameObject && lastNameObject.name) {
+  console.log(lastNameObject, lastDescObject, rootObjectIndex, JSON.stringify(output, null, "  "))
+  if(lastNameObject && lastNameObject.name && rootObjectIndex >= 0) {
     output[rootObjectIndex].name = lastNameObject.name
   }
-  if (lastDescObject && lastDescObject.desc) {
+  if (lastDescObject && lastDescObject.desc && rootObjectIndex >= 0) {
     output[rootObjectIndex].desc = lastDescObject.desc
   }
   // console.log("###########################", JSON.stringify(output, null, "  "))
@@ -60,7 +60,7 @@ function _flattenAllOrOneOf(name, parents, schema, indent, target) {
   output = output.filter((e) => e.type)
 
 	output = utils.uniqBy(output, (a, b) => {
-    return a.path() == b.path()
+    return a.path() == b.path() && a.name == b.name
 	})
 
   return output
@@ -175,7 +175,7 @@ class Traverser {
 
   process() {
     const schema = this.schema()
-    // console.log("types:", this.types(), "paths:", this.paths.map(e => e.replace("#/components/schemas/", "")).join("."), "ref:", this.refs.map(e => e.replace("#/components/schemas/", "")).join(","))
+    console.log("types:", this.types(), "paths:", this.paths.map(e => e.replace("#/components/schemas/", "")).join("."), "ref:", this.refs.map(e => e.replace("#/components/schemas/", "")).join(","))
 
     this.pre()
     for (let [name, sub] of _get_nested_schemas(schema)) {
@@ -229,7 +229,42 @@ class Traverser {
   }
 }
 
+function* iterOperations(doc) {
+  const methods = ["Get", "Post", "Delete", "Patch", "Put"]
+  const paths = doc.Model.Paths.PathItems;
+
+  for(let pathname of Object.keys(paths)) {
+    for(let method of methods) {
+      if(!paths[pathname][method]) {
+        continue
+      }
+      yield [method, pathname, paths[pathname][method]]
+    }
+  }
+}
+
+function getOperationSchemas(operation) {
+  var respSchema, reqSchema, pathParameter
+
+  var code = Object.keys(operation.Responses.Codes).filter(c => c.startsWith("2"))[0]
+  if (operation.Responses.Codes[code] && operation.Responses.Codes[code].Content["application/json"]) {
+    respSchema = operation.Responses.Codes[code].Content["application/json"].Schema.Schema()
+  }
+
+  if (operation && operation.Parameters.length > 0) {
+    pathParameter = operation.Parameters
+  }
+
+  if (operation.RequestBody) {
+    reqSchema = operation.RequestBody.Content["application/json"].Schema.Schema()
+  }
+
+  return [pathParameter, reqSchema, respSchema]
+}
+
 exports.flatten = flatten
 exports.getJaName = getJaName
 exports.getRefName = getRefName
 exports.Traverser = Traverser
+exports.iterOperations = iterOperations
+exports.getOperationSchemas = getOperationSchemas

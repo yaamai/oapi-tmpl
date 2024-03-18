@@ -1,101 +1,246 @@
 const utils = require('./utils.js')
 const oapi = require('./oapi.js')
+const excel = require('./excel.js')
 
-function schemaToTables(name, schema, ctx) {
-  if (schema.Type == "object") {
-    // table name are commonly plural form
-    const tablename = utils.toSnake(name) + "s"
-    ctx.tables[tablename] = {"_janame": oapi.getJaName(schema), "_rels": {}}
+const ALTNAME_ID = "識別子"
+const ALTNAME_VALUE = "値"
+const ALTNAME_RELTABLE = "関連付けテーブル"
 
-    Object.keys(schema.Properties).forEach((propname) => {
-      const propSchema = schema.Properties[propname].Schema()
-      const type = propSchema.Type[0]
-      const ref = oapi.getRefName(propSchema)
-
-      if (!ref && (type != "number" && type != "string" && type != "integer" && type != "boolean")) {
-        console.log("WARN: not supported nested structure found", tablename, propname, type)
-      }
-
-      if (!ref) {
-        ctx.tables[tablename][propname] = {type: type, _janame: oapi.getJaName(propSchema), desc: propSchema.Description}
-      }
-
-      if (ref) {
-        ctx.rels.push({kind: "object-ref", fromname: propname, from: tablename, to: utils.toSnake(ref)})
-      }
-    })
+class Context {
+  constructor() {
+    this.tables = {}
   }
 
-  if (schema.Type == "array") {
-    const tablename = utils.toSnake(name)
-    ctx.tables[tablename] = {"_rels": {}, id: {type: "number"}, _janame: oapi.getJaName(schema)}
-  }
-}
-
-function resolveRelations(ctx) {
-  ctx.rels.forEach((rel) => {
-    // simple object-to-object 1:1 mapping
-    if (rel.kind == "object-ref") {
-      ctx.tables[rel.from][rel.fromname] = {type: "number", foreign: rel.to+".id"}
-      ctx.tables[rel.from]["_rels"]["fk_"+rel.fromname] = {foreignKey: rel.fromname, references: rel.to, referencesKey: "id"}
+  ensureTable(name, altname) {
+    if (this.tables.hasOwnProperty(name)) {
+      return this.tables[name]
+    } else {
+      const table = new Table(name, altname)
+      this.tables[table.name] = table
+      return table
     }
-  })
+  }
 }
 
-function docToTables(doc) {
-  var ctx = {tables: {}, rels: []}
+class Table {
+  constructor(name, altname) {
+    this.name = name
+    this.altname = altname
+    this.columns = {}
+  }
 
+  addColumn(column) {
+    this.columns[column.name] = column
+  }
+}
+
+class Column {
+  constructor(name, altname, type, foreign) {
+    this.name = name
+    this.altname = altname
+    this.type = type
+    this.foreign = foreign
+  }
+}
+
+class Foreign {
+  // FOREIGN KEY(<keyname>) REFERENCES <tablename>(id)
+  constructor(keyname, tablename, refname) {
+    this.keyname = keyname
+    this.tablename = tablename
+    this.refname = refname
+  }
+}
+
+
+function* iterSchemas(doc) {
   const schemas = doc.Model.Components.Schemas
-  Object.keys(schemas).forEach((name) => {
-    const schema = schemas[name].Schema()
-    schemaToTables(name, schema, ctx)
-  })
-
-  resolveRelations(ctx)
-  return ctx
+  for(let name of Object.keys(schemas)) {
+    yield [name, schemas[name].Schema()]
+  }
 }
 
-function tablesToSQL(tables) {
-  Object.keys(tables).forEach((tableName) => {
-    console.log("CREATE TABLE %s(", tableName)
-    Object.keys(tables[tableName]).forEach((colName) => {
-      if(colName == "_rels") return
-      console.log("  %s %s,", colName, tables[tableName][colName].type)
-    })
-    Object.keys(tables[tableName]["_rels"]).forEach((relname) => {
-      const rel = tables[tableName]["_rels"][relname]
-      console.log("  CONSTRAINT %s FOREIGN KEY(%s) REFERENCES %s(%s)", relname, rel.foreignKey, rel.references, rel.referencesKey)
-    })
-    console.log(")")
-  })
+function* iterProps(schema) {
+  for(let propName of Object.keys(schema.Properties)) {
+    const propSchema = schema.Properties[propName].Schema()
+    const type = propSchema.Type[0]
+
+    yield [propName, type, propSchema]
+  }
 }
 
-function tablesToExcel(book, tables) {
-  Object.keys(tables).forEach((tableName) => {
+function getRef(schema) {
+  return schema.ParentProxy.GetReference().match(/[^\/]+$/)[0]
+}
+
+function arraySchemaToTable(ctx, name, schema) {
+  // table name are commonly plural form
+  let tablename = utils.toSnake(name) + "s"
+  let tablenameJa = oapi.getJaName(schema)
+  let table = ctx.ensureTable(tablename, tablenameJa)
+
+  // primitive types are added to column with fixed column name and fixed id (array can't have id in jsonschema)
+  let subSchema = schema.Items.A.Schema()
+  let subType = subSchema.Type[0]
+
+  // console.log(name, subType)
+  if(["number", "string", "integer", "boolean"].includes(subType)) {
+    table.addColumn(new Column("id", ALTNAME_ID, "number", null))
+    table.addColumn(new Column("value", ALTNAME_VALUE, subType, null))
+    return
+  }
+
+  let isRef = subSchema.ParentProxy.IsReference()
+  if(subType == "object" && !isRef) console.warn("WARN: can't determine relation target")
+
+  // when object ref in array, create relation table and add foreign key to array's table
+  if(subType == "object" && isRef) {
+    let refname = getRef(subSchema)
+    let refnameJa = oapi.getJaName(subSchema)
+    let refpropname = utils.toSnake(refname)
+    let reftablename = refpropname + "s"
+
+    table.addColumn(new Column("id", ALTNAME_ID, "number", null))
+    let relTable = ctx.ensureTable(tablename + "_" + reftablename, ALTNAME_RELTABLE+"("+tablename+"-"+reftablename+")")
+    relTable.addColumn(new Column(tablename+"_id", tablenameJa+ALTNAME_ID, "number", new Foreign(tablename+"_id", tablename, name)))
+    relTable.addColumn(new Column(refpropname+"_id", refnameJa+ALTNAME_ID, "number", new Foreign(refpropname+"_id", reftablename, refname)))
+
+    return
+  }
+
+  // console.log("        ######## WARN")
+}
+
+function objectSchemaToTable(ctx, name, schema) {
+  // table name are commonly plural form
+  const tablename = utils.toSnake(name) + "s"
+  const tablenameJa = oapi.getJaName(schema)
+
+  if (Object.keys(schema.Properties).length == 0) {
+    console.log("#############################")
+    return
+  }
+
+  let table = ctx.ensureTable(tablename, tablenameJa)
+
+  for(let [propName, propType, propSchema] of iterProps(schema)) {
+    // console.log(propName, propType, propSchema)
+
+    // primitive types are always added to column
+    if(["number", "string", "integer", "boolean"].includes(propType)) {
+      table.addColumn(new Column(propName, oapi.getJaName(propSchema), propType, null))
+      continue
+    }
+
+    // when object's property has object or allOf object, create column and 1:1 relation
+    // similary rules apply when object's property has array or allOf array, create column and 1:1 relation
+    let isRef = propSchema.ParentProxy.IsReference()
+    let isAllOf = propSchema.AllOf.length > 0
+    let allOfObjectSchemas = propSchema.AllOf.filter(s => s.Schema().ParentProxy.IsReference() && s.Schema().Type == "object")
+    let allOfArraySchemas = propSchema.AllOf.filter(s => s.Schema().ParentProxy.IsReference() && s.Schema().Type == "array")
+
+    let propAltName = oapi.getJaName(propSchema)
+    if (isAllOf) {
+      let allJaNames = propSchema.AllOf.map(s => oapi.getJaName(s.Schema())).filter(n => n)
+      propAltName = allJaNames[allJaNames.length-1]
+    }
+
+    if(propType == "object" && !isRef) console.warn("WARN: can't determine relation target")
+    if(isAllOf && allOfObjectSchemas.length > 1) console.warn("WARN: can't determine relation target")
+
+    if(propType == "object" && isRef) {
+      let refname = getRef(propSchema)
+      let tablename = utils.toSnake(refname) + "s"
+      table.addColumn(new Column(propName, propAltName, "number", new Foreign(propName, tablename, refname)))
+      continue
+    }
+
+    if(isAllOf && allOfObjectSchemas.length == 1) {
+      let refname = getRef(allOfObjectSchemas[0].Schema())
+      let tablename = utils.toSnake(refname) + "s"
+      table.addColumn(new Column(propName, propAltName, "number", new Foreign(propName, tablename, refname)))
+      continue
+    }
+
+    if(propType == "array" && isRef) {
+      let refname = getRef(propSchema)
+      let tablename = utils.toSnake(refname) + "s"
+      table.addColumn(new Column(propName, propAltName, "number", new Foreign(propName, tablename, refname)))
+      continue
+    }
+
+    if(propType == "array" && !isRef) {
+      console.log(JSON.stringify(propSchema.Items.A.Schema()))
+      let refname = getRef(propSchema.Items.A.Schema())
+      let tablename = utils.toSnake(refname) + "s"
+      table.addColumn(new Column(propName, propAltName, "number", new Foreign(propName, tablename, refname)))
+      continue
+    }
+
+    if(isAllOf && allOfArraySchemas.length == 1) {
+      let refname = getRef(allOfArraySchemas[0].Schema())
+      let tablename = utils.toSnake(refname) + "s"
+      table.addColumn(new Column(propName, propAltName, "number", new Foreign(propName, tablename, refname)))
+      continue
+    }
+
+    // console.log("        ######## WARN")
+  }
+}
+
+function schemaToTable(ctx, name, schema) {
+  // console.log(name, schema.Type)
+  if (schema.Type == "object") objectSchemaToTable(ctx, name, schema)
+  if (schema.Type == "array") arraySchemaToTable(ctx, name, schema)
+  if (schema.AllOf.length > 0) {
+    for(let subSchema of schema.AllOf) {
+      schemaToTable(ctx, name, subSchema.Schema())
+    }
+  }
+}
+
+function makeExcelSafeSheetName(s) {
+  let sheetName = s
+  if (sheetName.split("\n").length > 0) {
+    sheetName = sheetName.split("\n")[0]
+  }
+  sheetName = sheetName.slice(0, 20)
+  sheetName = sheetName.replace("/", "")
+  return sheetName
+}
+
+function tablesToExcel(ctx, book, listSheetname) {
+  for(let tablename of Object.keys(ctx.tables).sort()) {
     var pos = ["F8", "Q8", "AB8", "AK8", "AU8"]
+    let table = ctx.tables[tablename]
 
-    console.log("create", tableName, "sheet")
-    var sheetName = tables[tableName]["_janame"]
-    if (sheetName.split("\n").length > 0) {
-      sheetName = sheetName.split("\n")[0]
+    // console.log("create", tablename, "sheet", table.altname)
+    var sheetName = makeExcelSafeSheetName(table.altname || tablename)
+    if(!sheetName) {
+      continue
+    }
+    excel.dup(book, "template", sheetName)
+
+    for(let colname of Object.keys(table.columns)) {
+      let column = table.columns[colname]
+      excel.sets(book, sheetName, pos, [column.altname, column.name, column.type, "", column.desc])
+      pos = excel.offsets(pos, 1, 1)
     }
 
-    sheetName = sheetName.slice(0, 20)
-    sheetName = sheetName.replace("/", "")
-    if (!sheetName) {
-      console.log("WARN: ", sheetName)
-      console.log(sheetName)
-      console.log(JSON.stringify(tables[tableName]))
-      return
-    }
-    utils.dup(book, "template", sheetName)
+    excel.sets(book, sheetName, ["Q5"], [table.altname])
+  }
 
-    Object.keys(tables[tableName]).filter(e => !e.startsWith("_")).forEach((colName) => {
-      const col = tables[tableName][colName]
-      utils.sets(book, sheetName, pos, [col._janame, colName, col.type, "", col.desc])
-      pos = utils.offsets(pos, 1, 1)
-    })
-  })
+  var pos = ["F6", "S6", "AF6", "AU6"]
+  for(let tablename of Object.keys(ctx.tables).sort()) {
+    let table = ctx.tables[tablename]
+    excel.sets(book, listSheetname, pos, [table.altname, table.name, "PostgreSQL", table.desc])
+    pos = excel.offsets(pos, 1, 1)
+  }
+
+  return
 }
 
-exports.docToTables = docToTables
+exports.Context = Context
+exports.schemaToTable = schemaToTable
+exports.iterSchemas = iterSchemas
+exports.tablesToExcel = tablesToExcel

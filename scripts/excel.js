@@ -1,7 +1,13 @@
 // set cell values
 function sets(book, sheet, coords, vals) {
   coords.forEach((c, idx) => {
-    const err = book.SetCellValue(sheet, c, vals[idx])
+    let val = vals[idx]
+    if (!val) {
+      val = ""
+    }
+    val = val.toString().replace("<", "?ｼ?")
+    val = val.toString().replace(">", "?ｼ?")
+    const err = book.SetCellValue(sheet, c, val)
     if (err) {
       console.log(err)
     }

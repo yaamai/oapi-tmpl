@@ -1,17 +1,16 @@
 const utils = require('./scripts/utils.js')
-const schemas = require('./scripts/schema.js')
+const schema = require('./scripts/schema.js')
 
-var data = file("if.yaml")
-// assert(err)
-// console.log(data[0])
+var data = file(args()[0])
 var [doc, err] = openapischema(data)
 utils.assert(err, [])
-var result = schemas.docToTables(doc)
-utils.assert(result)
 
-// tablesToSQL(result.tables)
+var ctx = new schema.Context()
+for(let [name, s] of schema.iterSchemas(doc)) {
+  schema.schemaToTable(ctx, name, s)
+}
 
-var book = excelfile("data.base.xlsm")
-tablesToExcel(book, result.tables)
-book.SaveAs("data.xlsm")
+var book = excelfile(args()[1])
+schema.tablesToExcel(ctx, book, "一覧")
+book.SaveAs(args()[2])
 
