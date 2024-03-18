@@ -126,6 +126,20 @@ func newStyleFromCell(book *excelize.File, sheet string, coord string, alignment
 	return book.NewStyle(style)
 }
 
+func removeRow(book *excelize.File, sheet string, row int) {
+	book.RemoveRow(sheet, row)
+}
+
+func setPrintArea(book *excelize.File, name string, sheet string, area string) {
+	if err := book.SetDefinedName(&excelize.DefinedName{
+	    Name:     name,
+	    RefersTo: area,
+	    Scope:    sheet,
+	}); err != nil {
+	    fmt.Println(err)
+	}
+}
+
 func runTemplate(templPath string) {
 	vm := goja.New()
 	vm.Set("args", func() []string { return os.Args[2:] })
@@ -139,6 +153,8 @@ func runTemplate(templPath string) {
 		"cellNameToCoordinates": excelize.CellNameToCoordinates,
 		"coordinatesToCellName": excelize.CoordinatesToCellName,
 		"newStyleFromCell":      newStyleFromCell,
+		"removeRow": removeRow,
+		"setPrintArea": setPrintArea,
 	})
 
 	registry := new(require.Registry)
