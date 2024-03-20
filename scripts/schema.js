@@ -76,7 +76,7 @@ function getRef(schema) {
 function arraySchemaToTable(ctx, name, schema) {
   // table name are commonly plural form
   let tablename = utils.toSnake(name) + "s"
-  let tablenameJa = oapi.getJaName(schema)
+  let tablenameJa = oapi.getJaName(schema) || name
   let table = ctx.ensureTable(tablename, tablenameJa)
 
   // primitive types are added to column with fixed column name and fixed id (array can't have id in jsonschema)
@@ -94,9 +94,9 @@ function arraySchemaToTable(ctx, name, schema) {
   if(subType == "object" && !isRef) console.warn("WARN: can't determine relation target")
 
   // when object ref in array, create relation table and add foreign key to array's table
-  if(subType == "object" && isRef) {
+  if((subType == "object" || subType == "array") && isRef) {
     let refname = getRef(subSchema)
-    let refnameJa = oapi.getJaName(subSchema)
+    let refnameJa = oapi.getJaName(subSchema) || refname
     let refpropname = utils.toSnake(refname)
     let reftablename = refpropname + "s"
 
@@ -108,7 +108,7 @@ function arraySchemaToTable(ctx, name, schema) {
     return
   }
 
-  // console.log("        ######## WARN")
+  console.log("        ######## WARN")
 }
 
 function objectSchemaToTable(ctx, name, schema) {
