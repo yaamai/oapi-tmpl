@@ -226,12 +226,29 @@ function reduceAllOf(schema) {
 
   if (Object.keys(schema.AllOf).length > 0) {
     let effectiveSchemas = schema.AllOf.filter(s => (
-      (s.Schema().Type == "object" && s.Schema().Properties.length > 0) ||
-      (["array", "number", "string", "integer", "boolean"].includes(s.Schema().Type))
+      (s.Schema().Type == "object" && Object.keys(s.Schema().Properties).length > 0) ||
+      (["array", "number", "string", "integer", "boolean"].includes(s.Schema().Type[0]))
     ))
+    console.log("effectiveSchemas is", effectiveSchemas.length)
     if (effectiveSchemas.length == 1) {
-      return [effectiveSchemas[0], effectiveSchemas[0].Type]
+      return [effectiveSchemas[0].Schema(), effectiveSchemas[0].Type]
     }
+
+    let objectOrEmptySchemas = schema.AllOf.filter(s => (
+      !(["array", "number", "string", "integer", "boolean"].includes(s.Schema().Type))
+    ))
+    if (Object.keys(schema.AllOf).length == objectOrEmptySchemas.length) {
+      schema.Type[0] = "object"
+      schema.Properties = {}
+      for (let s of objectOrEmptySchemas) {
+        for (let n of Object.keys(s.Schema().Properties)) {
+          schema.Properties[n] = s.Schema().Properties[n]
+          console.log(schema.Properties[n].ParentProxy)
+        }
+      }
+      return [schema, schema.Type[0]]
+    }
+
     return [schema, "allof"]
   }
 

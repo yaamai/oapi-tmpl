@@ -79,31 +79,20 @@ TEST_DATA = yaml(`
       name: hoges
       altname: Hoge
       columns:
-        fuga_id:
-          name: fuga_id
-          altname: fuga_id
-          type: number
-          foreign:
-            keyname: fuga_id
-            tablename: fugas
-            refname: "#/components/schemas/Fuga"
-        foo_id:
-          name: foo_id
-          altname: foo_id
-          type: number
-          foreign:
-            keyname: foo_id
-            tablename: foos
-            refname: "#/components/schemas/Foo"
+        aaa:
+          name: aaa
+          altname: aaa
+          type: string
+          foreign: null
+        bbb:
+          name: bbb
+          altname: bbb
+          type: integer
+          foreign: null
     foos:
       name: foos
       altname: Foo
       columns:
-        id:
-          name: id
-          altname: id
-          type: number
-          foreign:
         aaa:
           name: aaa
           altname: aaa
@@ -113,11 +102,6 @@ TEST_DATA = yaml(`
       name: fugas
       altname: Fuga
       columns:
-        id:
-          name: id
-          altname: id
-          type: number
-          foreign:
         bbb:
           name: bbb
           altname: bbb
