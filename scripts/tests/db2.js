@@ -5,22 +5,73 @@ const schemas = require('./scripts/schema.js')
 TEST_DATA = yaml(`
 - desc: simple object
   expect:
-    hoges:
-      name: hoges
-      altname: aa
+    perms:
+      name: perms
+      altname: Perm
       columns:
-        aaa:
-          name: aaa
-          altname: aaa
+        hoge:
+          name: hoge
+          altname: hoge
           type: string
-          desc: ""
           foreign: null
-        bbb:
-          name: bbb
-          altname: bbb
+    role_lists:
+      name: role_lists
+      altname: RoleList
+      columns:
+        id:
+          name: id
+          altname: "識別子"
           type: number
-          desc: ""
           foreign: null
+    role_lists_roles:
+      name: role_lists_roles
+      altname: "関連付けテーブル(role_lists-roles)"
+      columns:
+        role_lists_id:
+          name: role_lists_id
+          altname: "RoleList識別子"
+          type: number
+          foreign:
+            keyname: role_lists_id
+            tablename: role_lists
+            refname: RoleList
+        role_id:
+          name: role_id
+          altname: "Role識別子"
+          type: number
+          foreign:
+            keyname: role_id
+            tablename: roles
+            refname: Role
+    roles:
+      name: roles
+      altname: Role
+      columns:
+        id:
+          name: id
+          altname: "識別子"
+          type: number
+          foreign: null
+    roles_perms:
+      name: roles_perms
+      altname: "関連付けテーブル(roles-perms)"
+      columns:
+        roles_id:
+          name: roles_id
+          altname: "Role識別子"
+          type: number
+          foreign:
+            keyname: roles_id
+            tablename: roles
+            refname: Role
+        perm_id:
+          name: perm_id
+          altname: "Perm識別子"
+          type: number
+          foreign:
+            keyname: perm_id
+            tablename: perms
+            refname: Perm
   name: RoleList
   input: |
     openapi: 3.0.1
@@ -46,13 +97,13 @@ TEST_DATA = yaml(`
 `)
 
 for(let test of TEST_DATA) {
-  console.log(test.input)
   var [doc, err] = openapischema(test.input)
   utils.assert(err, [])
 
   var ctx = new schemas.Context()
-  let schema = doc.Model.Components.Schemas[test.name].Schema()
-  schemas.schemaToTable(ctx, test.name, schema)
+  for(let [name, s] of schemas.iterSchemas(doc)) {
+    schemas.schemaToTable(ctx, name, s)
+  }
 
-  utils.assert(test.expect, ctx, test.desc)
+  utils.assert(test.expect, ctx.tables, test.desc)
 }

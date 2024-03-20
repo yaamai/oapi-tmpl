@@ -114,7 +114,7 @@ function arraySchemaToTable(ctx, name, schema) {
 function objectSchemaToTable(ctx, name, schema) {
   // table name are commonly plural form
   const tablename = utils.toSnake(name) + "s"
-  const tablenameJa = oapi.getJaName(schema)
+  const tablenameJa = oapi.getJaName(schema) || name
 
   if (Object.keys(schema.Properties).length == 0) {
     console.log("#############################")
@@ -128,7 +128,7 @@ function objectSchemaToTable(ctx, name, schema) {
 
     // primitive types are always added to column
     if(["number", "string", "integer", "boolean"].includes(propType)) {
-      table.addColumn(new Column(propName, oapi.getJaName(propSchema), propType, null))
+      table.addColumn(new Column(propName, oapi.getJaName(propSchema) || propName, propType, null))
       continue
     }
 
@@ -139,7 +139,7 @@ function objectSchemaToTable(ctx, name, schema) {
     let allOfObjectSchemas = propSchema.AllOf.filter(s => s.Schema().ParentProxy.IsReference() && s.Schema().Type == "object")
     let allOfArraySchemas = propSchema.AllOf.filter(s => s.Schema().ParentProxy.IsReference() && s.Schema().Type == "array")
 
-    let propAltName = oapi.getJaName(propSchema)
+    let propAltName = oapi.getJaName(propSchema) || propName
     if (isAllOf) {
       let allJaNames = propSchema.AllOf.map(s => oapi.getJaName(s.Schema())).filter(n => n)
       propAltName = allJaNames[allJaNames.length-1]
