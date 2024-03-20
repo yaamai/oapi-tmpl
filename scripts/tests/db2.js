@@ -3,21 +3,25 @@ const db = require('./scripts/db.js')
 const schemas = require('./scripts/schema.js')
 
 TEST_DATA = yaml(`
-- desc: simple object
+- desc: test description overwrite order
   expect:
     hoges:
       name: hoges
-      altname: aa
+      altname: bbb
       columns:
         aaa:
           name: aaa
           altname: aaa
           type: string
           foreign: null
-        bbb:
-          name: bbb
-          altname: bbb
-          type: number
+    foos:
+      name: foos
+      altname: aaa
+      columns:
+        aaa:
+          name: aaa
+          altname: aaa
+          type: string
           foreign: null
   name: Hoge
   input: |
@@ -29,14 +33,15 @@ TEST_DATA = yaml(`
     components:
       schemas:
         Hoge:
+          allOf:
+          - $ref: "#/components/schemas/Foo"
+          - description: bbb
+        Foo:
           type: object
-          description: a
-          x-janame: aa
+          description: aaa
           properties:
             aaa:
               type: string
-            bbb:
-              type: number
 
 - desc: simple object with primitive ref
   expect:

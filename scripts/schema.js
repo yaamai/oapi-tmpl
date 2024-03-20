@@ -231,7 +231,13 @@ function reduceAllOf(schema) {
     ))
     console.log("effectiveSchemas is", effectiveSchemas.length)
     if (effectiveSchemas.length == 1) {
-      return [effectiveSchemas[0].Schema(), effectiveSchemas[0].Type]
+      let updatedSchema = effectiveSchemas[0].Schema()
+      for (let s of schema.AllOf) {
+        if (s.Schema().Description) {
+          updatedSchema.Description = s.Schema().Description
+        }
+      }
+      return [updatedSchema, updatedSchema.Type]
     }
 
     let objectOrEmptySchemas = schema.AllOf.filter(s => (
