@@ -169,6 +169,7 @@ function objectSchemaToTable(ctx, name, schema) {
       continue
     }
 
+    // {users: [User()]}
     if(propType == "array" && !isRef) {
       console.log(JSON.stringify(propSchema.Items.A.Schema()))
       let refname = getRef(propSchema.Items.A.Schema())
@@ -187,6 +188,33 @@ function objectSchemaToTable(ctx, name, schema) {
     // console.log("        ######## WARN")
   }
 }
+
+// define conversion handler
+// <parent-type> <child-define-type> <child-type>
+//   type = object | array | string | number | integer | boolean
+//     non-nest-type = string | number | integer | boolean
+//     nest-type = object | array
+//   define-type = ref | literal
+// TODO: allof/oneof/anyof
+
+function impossible() {}
+function not_implemented_yet() {}
+const CONVERT_HANDLERS = {array: {literal: {}, ref: {}}}
+CONVERT_HANDLERS["array"]["literal"]["non-nest"] = true
+CONVERT_HANDLERS["array"]["literal"]["nest"] = impossible // anonymous type can't determine relation name
+CONVERT_HANDLERS["array"]["ref"]["*"] = true
+CONVERT_HANDLERS["object"]["literal"]["non-nest"] = true
+CONVERT_HANDLERS["object"]["literal"]["nest"] = not_implemented_yet
+CONVERT_HANDLERS["object"]["ref"]["*"] = true
+CONVERT_HANDLERS["object"]["*"]["allOf"] = true
+//   "array": {
+//     "ref": {
+//       "type": {},
+//     },
+//     "literal": {
+//     },
+//   },
+// }
 
 function schemaToTable(ctx, name, schema) {
   console.log(name, schema.Type)
