@@ -200,36 +200,149 @@ function objectSchemaToTable(ctx, name, schema) {
 
 function impossible() {}
 function not_implemented_yet() {}
-const CONVERT_HANDLERS = {array: {literal: {}, ref: {}}}
-CONVERT_HANDLERS["array"]["ref"]["*"]["*"] = true
-CONVERT_HANDLERS["array"]["literal"]["non-nest"]["*"] = true
-// make <ref>_lists table automatically
-CONVERT_HANDLERS["array"]["literal"]["array"]["has-ref"] = not_implemented_yet
-// possible when reduced nest and non-unique id? ~~anonymous type can't determine relation name~~
-CONVERT_HANDLERS["array"]["literal"]["object"]["*"] = not_implemented_yet
-CONVERT_HANDLERS["array"]["literal"]["allof"]["has-unique-ref"] = true
-CONVERT_HANDLERS["array"]["literal"]["allof"]["has-unique-non-nest"] = not_implemented_yet
+// const CONVERT_HANDLERS = {array: {literal: {}, ref: {}}}
+// CONVERT_HANDLERS["array"]["ref"]["*"]["*"] = true
+// CONVERT_HANDLERS["array"]["literal"]["non-nest"]["*"] = true
+// // make <ref>_lists table automatically
+// CONVERT_HANDLERS["array"]["literal"]["array"]["has-ref"] = not_implemented_yet
+// // possible when reduced nest and non-unique id? ~~anonymous type can't determine relation name~~
+// CONVERT_HANDLERS["array"]["literal"]["object"]["*"] = not_implemented_yet
+// CONVERT_HANDLERS["array"]["literal"]["allof"]["has-unique-ref"] = true
+// CONVERT_HANDLERS["array"]["literal"]["allof"]["has-unique-non-nest"] = not_implemented_yet
+// 
+// CONVERT_HANDLERS["object"]["ref"]["*"]["*"] = true
+// CONVERT_HANDLERS["object"]["literal"]["non-nest"]["*"] = true
+// // make <ref>_lists table automatically
+// CONVERT_HANDLERS["object"]["literal"]["array"]["has-ref"] = not_implemented_yet
+// // make <propname>_<propname> column?
+// CONVERT_HANDLERS["object"]["literal"]["object"]["*"] = not_implemented_yet
+// CONVERT_HANDLERS["object"]["literal"]["allof"]["has-unique-ref"] = true
+// CONVERT_HANDLERS["object"]["literal"]["allof"]["has-unique-non-nest"] = not_implemented_yet
 
-CONVERT_HANDLERS["object"]["ref"]["*"]["*"] = true
-CONVERT_HANDLERS["object"]["literal"]["non-nest"]["*"] = true
-// make <ref>_lists table automatically
-CONVERT_HANDLERS["object"]["literal"]["array"]["has-ref"] = not_implemented_yet
-// make <propname>_<propname> column?
-CONVERT_HANDLERS["object"]["literal"]["object"]["*"] = not_implemented_yet
-CONVERT_HANDLERS["object"]["literal"]["allof"]["has-unique-ref"] = true
-CONVERT_HANDLERS["object"]["literal"]["allof"]["has-unique-non-nest"] = not_implemented_yet
+function reduceAllOf(schema) {
+  if (schema.Type[0]) {
+    return [schema, schema.Type[0]]
+  }
 
-function schemaToTable(ctx, name, schema) {
-  console.log(name, schema.Type)
-  if (schema.Type == "object") objectSchemaToTable(ctx, name, schema)
-  if (schema.Type == "array") arraySchemaToTable(ctx, name, schema)
-  if (schema.AllOf.length > 0) {
-    console.log(name, "allof")
-    // recurse with parent schema name
-    for(let subSchema of schema.AllOf) {
-      schemaToTable(ctx, name, subSchema.Schema())
+  if (Object.keys(schema.AllOf).length > 0) {
+    let effectiveSchemas = schema.AllOf.filter(s => (
+      (s.Schema().Type == "object" && s.Schema().Properties.length > 0) ||
+      (["array", "number", "string", "integer", "boolean"].includes(s.Schema().Type))
+    ))
+    if (effectiveSchemas.length == 1) {
+      return [effectiveSchemas[0], effectiveSchemas[0].Type]
+    }
+    return [schema, "allof"]
+  }
+
+  return [schema, null]
+}
+
+function* _get_nested_schemas(schema) {
+  const type = schema.Type[0]
+
+  if (type == "array") {
+    let sub = schema.Items.A.Schema()
+    yield [null, sub]
+  }
+
+  if (type == "object") {
+    for(let propname of Object.keys(schema.Properties)) {
+      let sub = schema.Properties[propname].Schema()
+      yield [propname, sub]
     }
   }
+}
+
+// create N:N relation between array and item's ref
+function _arrayToRef(ctx, name, schema, subSchema) {
+  // table name are commonly plural form
+  let tablename = utils.toSnake(name) + "s"
+  let tablenameJa = oapi.getJaName(schema) || name
+  let refname = getRef(subSchema)
+  let refnameJa = oapi.getJaName(subSchema) || refname
+  let refpropname = utils.toSnake(refname)
+  let reftablename = refpropname + "s"
+  //
+  // array itself has id in table
+  let table = ctx.ensureTable(tablename, tablenameJa)
+  table.addColumn(new Column("id", ALTNAME_ID, "number", null))
+
+  // relation table array table and referred table
+  let relTable = ctx.ensureTable(tablename + "_" + reftablename, ALTNAME_RELTABLE+"("+tablename+"-"+reftablename+")")
+  relTable.addColumn(new Column(tablename+"_id", tablenameJa+ALTNAME_ID, "number", new Foreign(tablename+"_id", tablename, name)))
+  relTable.addColumn(new Column(refpropname+"_id", refnameJa+ALTNAME_ID, "number", new Foreign(refpropname+"_id", reftablename, refname)))
+}
+
+function _arrayTable(ctx, name, schema, subName, subSchema, subType) {
+  // table name are commonly plural form
+  let tablename = utils.toSnake(name) + "s"
+  let tablenameJa = oapi.getJaName(schema) || name
+
+  // array itself has id in table
+  let table = ctx.ensureTable(tablename, tablenameJa)
+  table.addColumn(new Column("id", ALTNAME_ID, "number", null))
+  table.addColumn(new Column("value", ALTNAME_VALUE, subType, null))
+}
+
+function _objectToNonNest(ctx, name, schema, subName, subSchema, subType) {
+  // table name are commonly plural form
+  let tablename = utils.toSnake(name) + "s"
+  let tablenameJa = oapi.getJaName(schema) || name
+
+  let table = ctx.ensureTable(tablename, tablenameJa)
+  table.addColumn(new Column(subName, oapi.getJaName(subSchema) || subName, subType, null))
+}
+
+function _objectToRef(ctx, name, schema, subName, subSchema, subType) {
+  // table name are commonly plural form
+  let tablename = utils.toSnake(name) + "s"
+  let tablenameJa = oapi.getJaName(schema) || name
+  let table = ctx.ensureTable(tablename, tablenameJa)
+
+  let refname = getRef(subSchema)
+  let refnameJa = oapi.getJaName(subSchema) || subName
+  let refpropname = utils.toSnake(refname)
+  let reftablename = refpropname + "s"
+
+  table.addColumn(new Column(refpropname+"_id", refnameJa, "number", new Foreign(refpropname+"_id", reftablename, refname)))
+}
+
+function _isNonNest(t) {
+  return ["number", "string", "integer", "boolean"].includes(t)
+}
+
+function schemaToTable(ctx, name, schema) {
+  [schema, type] = reduceAllOf(schema)
+  // console.log(name, type)
+
+
+  for (let [subName, subSchema] of _get_nested_schemas(schema)) {
+    [subSchema, subType] = reduceAllOf(subSchema)
+    let subIsRef = subSchema.ParentProxy.IsReference()
+    console.log(name, type, subIsRef, subType, subName)
+
+    if (type == "array" && subIsRef && _isNonNest(subType)) _arrayTable(ctx, name, schema, subName, subSchema, subType)
+    else if (type == "array" && subIsRef) _arrayToRef(ctx, name, schema, subSchema)
+    else if (type == "array" && !subIsRef && _isNonNest(subType)) _arrayTable(ctx, name, schema, subName, subSchema, subType)
+    else if (type == "object" && subIsRef && _isNonNest(subType)) _objectToNonNest(ctx, name, schema, subName, subSchema, subType)
+    else if (type == "object" && !subIsRef && _isNonNest(subType)) _objectToNonNest(ctx, name, schema, subName, subSchema, subType)
+    else if (type == "object" && subIsRef) _objectToRef(ctx, name, schema, subName, subSchema, subType)
+
+    // if (subIsRef) {
+    //   _arrayToRef(ctx, name, tablename, tablenameJa, refname, refnameJa, refpropname, reftablename)
+    // }
+  }
+
+  // if (schema.Type == "object") objectSchemaToTable(ctx, name, schema)
+  // if (schema.Type == "array") arraySchemaToTable(ctx, name, schema)
+  // if (schema.AllOf.length > 0) {
+  //   console.log(name, "allof")
+  //   // recurse with parent schema name
+  //   for(let subSchema of schema.AllOf) {
+  //     schemaToTable(ctx, name, subSchema.Schema())
+  //   }
+  // }
 }
 
 function makeExcelSafeSheetName(s) {
