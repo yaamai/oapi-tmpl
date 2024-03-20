@@ -151,21 +151,21 @@ function objectSchemaToTable(ctx, name, schema) {
     if(propType == "object" && isRef) {
       let refname = getRef(propSchema)
       let tablename = utils.toSnake(refname) + "s"
-      table.addColumn(new Column(propName, propAltName, "number", new Foreign(propName, tablename, refname)))
+      table.addColumn(new Column(utils.toSnake(refname)+"_id", propAltName, "number", new Foreign(utils.toSnake(refname)+"_id", tablename, refname)))
       continue
     }
 
     if(isAllOf && allOfObjectSchemas.length == 1) {
       let refname = getRef(allOfObjectSchemas[0].Schema())
       let tablename = utils.toSnake(refname) + "s"
-      table.addColumn(new Column(propName, propAltName, "number", new Foreign(propName, tablename, refname)))
+      table.addColumn(new Column(utils.toSnake(refname)+"_id", propAltName, "number", new Foreign(utils.toSnake(refname)+"_id", tablename, refname)))
       continue
     }
 
     if(propType == "array" && isRef) {
       let refname = getRef(propSchema)
       let tablename = utils.toSnake(refname) + "s"
-      table.addColumn(new Column(propName, propAltName, "number", new Foreign(propName, tablename, refname)))
+      table.addColumn(new Column(utils.toSnake(refname)+"_id", propAltName, "number", new Foreign(utils.toSnake(refname)+"_id", tablename, refname)))
       continue
     }
 
@@ -173,14 +173,14 @@ function objectSchemaToTable(ctx, name, schema) {
       console.log(JSON.stringify(propSchema.Items.A.Schema()))
       let refname = getRef(propSchema.Items.A.Schema())
       let tablename = utils.toSnake(refname) + "s"
-      table.addColumn(new Column(propName, propAltName, "number", new Foreign(propName, tablename, refname)))
+      table.addColumn(new Column(utils.toSnake(refname)+"_id", propAltName, "number", new Foreign(utils.toSnake(refname)+"_id", tablename, refname)))
       continue
     }
 
     if(isAllOf && allOfArraySchemas.length == 1) {
       let refname = getRef(allOfArraySchemas[0].Schema())
       let tablename = utils.toSnake(refname) + "s"
-      table.addColumn(new Column(propName, propAltName, "number", new Foreign(propName, tablename, refname)))
+      table.addColumn(new Column(utils.toSnake(refname)+"_id", propAltName, "number", new Foreign(utils.toSnake(refname)+"_id", tablename, refname)))
       continue
     }
 
@@ -189,10 +189,12 @@ function objectSchemaToTable(ctx, name, schema) {
 }
 
 function schemaToTable(ctx, name, schema) {
-  // console.log(name, schema.Type)
+  console.log(name, schema.Type)
   if (schema.Type == "object") objectSchemaToTable(ctx, name, schema)
   if (schema.Type == "array") arraySchemaToTable(ctx, name, schema)
   if (schema.AllOf.length > 0) {
+    console.log(name, "allof")
+    // recurse with parent schema name
     for(let subSchema of schema.AllOf) {
       schemaToTable(ctx, name, subSchema.Schema())
     }
