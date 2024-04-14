@@ -2,19 +2,72 @@ const utils = require('./scripts/utils.js')
 const oapi = require('./scripts/oapi.js')
 
 TEST_DATA = yaml(`
+- desc: altname of object and description allOf in prop
+  expect:
+  - name: Hoge
+    altname: null
+    type: object
+    desc: ""
+    parents: ["Hoge"]
+    indent: 0
+    repeated: false
+    required: false
+  - name: prop
+    altname: propjaname
+    type: object
+    desc: "propdesc"
+    parents: ["Hoge", "prop"]
+    indent: 1
+    repeated: false
+    required: false
+  - name: aaa
+    altname: null
+    type: string
+    desc: "CCC"
+    parents: ["Hoge", "prop", "aaa"]
+    indent: 2
+    repeated: false
+    required: false
+  name: Hoge
+  input: |
+    openapi: 3.0.1
+    info:
+      title: api
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Hoge:
+          type: object
+          properties:
+            prop:
+              allOf:
+              - $ref: "#/components/schemas/Foo"
+              - x-janame: propjaname
+              - description: propdesc
+        Foo:
+          type: object
+          description: BBB
+          properties:
+            aaa:
+              description: CCC
+              type: string
+
 - desc: allOf array and desc
   expect:
-  - name: BBB
+  - name: Hoge
+    altname: null
     type: array
     desc: "BBB"
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
-  - name: AAA
+  - name: value
+    altname: null
     type: string
     desc: "AAA"
-    parents: ["Hoge", "AAA"]
+    parents: ["Hoge", "value"]
     indent: 1
     repeated: true
     required: false
@@ -40,16 +93,18 @@ TEST_DATA = yaml(`
 - desc: items without ref
   expect:
   - name: Hoge
+    altname: null
     type: array
     desc: ""
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
-  - name: AAA
+  - name: value
+    altname: AAA
     type: string
     desc: ""
-    parents: ["Hoge", "AAA"]
+    parents: ["Hoge", "value"]
     indent: 1
     repeated: true
     required: false
@@ -71,28 +126,32 @@ TEST_DATA = yaml(`
 # TODO: check ref in ref
 - desc: mixed oneOf,allOf
   expect:
-  - name: Bobject
+  - name: Hoge
+    altname: null
     type: object
     desc: "Bobject"
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
-  - name: IDID
+  - name: id
+    altname: null
     type: string
     desc: "IDID"
     parents: ["Hoge", "id"]
     indent: 1
     repeated: false
     required: false
-  - name: aa
+  - name: a
+    altname: null
     type: string
     desc: "aa"
     parents: ["Hoge", "a"]
     indent: 1
     repeated: false
     required: false
-  - name: bb
+  - name: b
+    altname: null
     type: number
     desc: "bb"
     parents: ["Hoge", "b"]
@@ -137,42 +196,48 @@ TEST_DATA = yaml(`
 
 - desc: array and object deeply nested
   expect:
-  - name: AAA
+  - name: Hoge
+    altname: AAA
     type: object
     desc: "BBB"
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
-  - name: CCC
+  - name: aaa
+    altname: null
     type: string
     desc: "CCC"
     parents: ["Hoge", "aaa"]
     indent: 1
     repeated: false
     required: false
-  - name: DDD
+  - name: bbb
+    altname: null
     type: array
     desc: "DDD"
     parents: ["Hoge", "bbb"]
     indent: 1
     repeated: false
     required: true
-  - name: EEE
+  - name: Bar
+    altname: null
     type: object
     desc: "EEE"
     parents: ["Hoge", "bbb", "Bar"]
     indent: 2
     repeated: true
     required: false
-  - name: FFF
+  - name: list
+    altname: null
     type: array
     desc: "FFF"
     parents: ["Hoge", "bbb", "Bar", "list"]
     indent: 3
     repeated: false
     required: false
-  - name: GGG
+  - name: Baz
+    altname: null
     type: object
     desc: "GGG"
     parents: ["Hoge", "bbb", "Bar", "list", "Baz"]
@@ -220,14 +285,16 @@ TEST_DATA = yaml(`
 
 - desc: altname of object and description allOf
   expect:
-  - name: AAA
+  - name: Hoge
+    altname: AAA
     type: object
     desc: "BBB"
     parents: ["Hoge"]
     indent: 0
     repeated: false
     required: false
-  - name: CCC
+  - name: aaa
+    altname: null
     type: string
     desc: "CCC"
     parents: ["Hoge", "aaa"]
@@ -258,6 +325,7 @@ TEST_DATA = yaml(`
 - desc: object and description allOf
   expect:
   - name: Hoge
+    altname: null
     type: object
     desc: ""
     parents: ["Hoge"]
@@ -265,6 +333,7 @@ TEST_DATA = yaml(`
     repeated: false
     required: false
   - name: aaa
+    altname: null
     type: string
     desc: ""
     parents: ["Hoge", "aaa"]
@@ -293,6 +362,7 @@ TEST_DATA = yaml(`
 - desc: all object allOf
   expect:
   - name: Hoge
+    altname: null
     type: object
     desc: ""
     parents: ["Hoge"]
@@ -300,6 +370,7 @@ TEST_DATA = yaml(`
     repeated: false
     required: false
   - name: aaa
+    altname: null
     type: string
     desc: ""
     parents: ["Hoge", "aaa"]
@@ -307,6 +378,7 @@ TEST_DATA = yaml(`
     repeated: false
     required: false
   - name: ccc
+    altname: null
     type: string
     desc: ""
     parents: ["Hoge", "ccc"]
@@ -340,6 +412,7 @@ TEST_DATA = yaml(`
 - desc: array in array
   expect:
   - name: Hoge
+    altname: null
     type: array
     desc: ""
     parents: ["Hoge"]
@@ -347,6 +420,7 @@ TEST_DATA = yaml(`
     repeated: false
     required: false
   - name: Fuga
+    altname: null
     type: array
     desc: ""
     parents: ["Hoge", "Fuga"]
@@ -354,6 +428,7 @@ TEST_DATA = yaml(`
     repeated: true
     required: false
   - name: Foo
+    altname: null
     type: object
     desc: ""
     parents: ["Hoge", "Fuga", "Foo"]
@@ -361,6 +436,7 @@ TEST_DATA = yaml(`
     repeated: true
     required: false
   - name: ccc
+    altname: null
     type: string
     desc: ""
     parents: ["Hoge", "Fuga", "Foo", "ccc"]
@@ -394,6 +470,7 @@ TEST_DATA = yaml(`
 - desc: object ref in array
   expect:
   - name: Hoge
+    altname: null
     type: array
     desc: ""
     parents: ["Hoge"]
@@ -401,6 +478,7 @@ TEST_DATA = yaml(`
     repeated: false
     required: false
   - name: Foo
+    altname: null
     type: object
     desc: ""
     parents: ["Hoge", "Foo"]
@@ -408,6 +486,7 @@ TEST_DATA = yaml(`
     repeated: true
     required: false
   - name: ccc
+    altname: null
     type: string
     desc: ""
     parents: ["Hoge", "Foo", "ccc"]
@@ -437,6 +516,7 @@ TEST_DATA = yaml(`
 - desc: object ref in object
   expect:
   - name: Hoge
+    altname: null
     type: object
     desc: ""
     parents: ["Hoge"]
@@ -444,6 +524,7 @@ TEST_DATA = yaml(`
     repeated: false
     required: false
   - name: aaa
+    altname: null
     type: string
     desc: ""
     parents: ["Hoge", "aaa"]
@@ -451,6 +532,7 @@ TEST_DATA = yaml(`
     repeated: false
     required: false
   - name: bbb
+    altname: null
     type: object # TODO: check this is correct or not.
     desc: ""
     parents: ["Hoge", "bbb"]
@@ -458,6 +540,7 @@ TEST_DATA = yaml(`
     repeated: false
     required: false
   - name: ccc
+    altname: null
     type: string
     desc: ""
     parents: ["Hoge", "bbb", "ccc"]
@@ -490,6 +573,7 @@ TEST_DATA = yaml(`
 - desc: primitive in array
   expect:
   - name: Hoge
+    altname: null
     type: array
     desc: ""
     parents: ["Hoge"]
@@ -497,6 +581,7 @@ TEST_DATA = yaml(`
     repeated: false
     required: false
   - name: Foo
+    altname: null
     type: string
     desc: ""
     parents: ["Hoge", "Foo"]
@@ -522,6 +607,7 @@ TEST_DATA = yaml(`
 - desc: object
   expect:
   - name: Hoge
+    altname: null
     type: object
     desc: ""
     parents: ["Hoge"]
@@ -529,6 +615,7 @@ TEST_DATA = yaml(`
     repeated: false
     required: false
   - name: aaa
+    altname: null
     type: string
     desc: ""
     parents: ["Hoge", "aaa"]
@@ -536,6 +623,7 @@ TEST_DATA = yaml(`
     repeated: false
     required: false
   - name: bbb
+    altname: null
     type: string
     desc: ""
     parents: ["Hoge", "bbb"]
@@ -563,6 +651,7 @@ TEST_DATA = yaml(`
 - desc: primitive
   expect:
   - name: Hoge
+    altname: null
     type: string
     desc: ""
     parents: ["Hoge"]
