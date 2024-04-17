@@ -281,9 +281,9 @@ function* _get_nested_schemas(schema) {
 function _arrayToRef(ctx, name, schema, subSchema) {
   // table name are commonly plural form
   let tablename = utils.toSnake(name) + "s"
-  let tablenameJa = oapi.getJaName(schema) || name
+  let tablenameJa = oapi.getJaName(schema)
   let refname = getRef(subSchema)
-  let refnameJa = oapi.getJaName(subSchema) || refname
+  let refnameJa = oapi.getJaName(subSchema)
   let refpropname = utils.toSnake(refname)
   let reftablename = refpropname + "s"
   //
@@ -300,7 +300,7 @@ function _arrayToRef(ctx, name, schema, subSchema) {
 function _arrayTable(ctx, name, schema, subName, subSchema, subType) {
   // table name are commonly plural form
   let tablename = utils.toSnake(name) + "s"
-  let tablenameJa = oapi.getJaName(schema) || name
+  let tablenameJa = oapi.getJaName(schema)
 
   // array itself has id in table
   let table = ctx.ensureTable(tablename, tablenameJa)
@@ -311,7 +311,7 @@ function _arrayTable(ctx, name, schema, subName, subSchema, subType) {
 function _objectToNonNest(ctx, name, schema, subName, subSchema, subType) {
   // table name are commonly plural form
   let tablename = utils.toSnake(name) + "s"
-  let tablenameJa = oapi.getJaName(schema) || name
+  let tablenameJa = oapi.getJaName(schema)
 
   let table = ctx.ensureTable(tablename, tablenameJa)
   table.addColumn(new Column(subName, oapi.getJaName(subSchema) || subName, subType, null))
@@ -320,7 +320,7 @@ function _objectToNonNest(ctx, name, schema, subName, subSchema, subType) {
 function _objectToRef(ctx, name, schema, subName, subSchema, subType) {
   // table name are commonly plural form
   let tablename = utils.toSnake(name) + "s"
-  let tablenameJa = oapi.getJaName(schema) || name
+  let tablenameJa = oapi.getJaName(schema)
   let table = ctx.ensureTable(tablename, tablenameJa)
 
   let refname = getRef(subSchema)

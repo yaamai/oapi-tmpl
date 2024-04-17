@@ -7,7 +7,7 @@ TEST_DATA = yaml(`
   expect:
     hoges:
       name: hoges
-      altname: bbb
+      altname: null
       columns:
         aaa:
           name: aaa
@@ -16,7 +16,7 @@ TEST_DATA = yaml(`
           foreign: null
     foos:
       name: foos
-      altname: aaa
+      altname: null
       columns:
         aaa:
           name: aaa
@@ -47,7 +47,7 @@ TEST_DATA = yaml(`
   expect:
     hoges:
       name: hoges
-      altname: Hoge
+      altname: null
       columns:
         aaa:
           name: aaa
@@ -82,7 +82,7 @@ TEST_DATA = yaml(`
   expect:
     hoges:
       name: hoges
-      altname: Hoge
+      altname: null
       columns:
         aaa:
           name: aaa
@@ -96,7 +96,7 @@ TEST_DATA = yaml(`
           foreign: null
     foos:
       name: foos
-      altname: Foo
+      altname: null
       columns:
         aaa:
           name: aaa
@@ -105,7 +105,7 @@ TEST_DATA = yaml(`
           foreign: null
     fugas:
       name: fugas
-      altname: Fuga
+      altname: null
       columns:
         bbb:
           name: bbb
@@ -140,7 +140,7 @@ TEST_DATA = yaml(`
   expect:
     hoges:
       name: hoges
-      altname: Hoge
+      altname: null
       columns:
         aaa:
           name: aaa
@@ -157,7 +157,7 @@ TEST_DATA = yaml(`
             refname: "Fuga"
     fugas:
       name: "fugas"
-      altname: "Fuga"
+      altname: null
       columns:
         ccc:
           name: "ccc"
@@ -190,7 +190,7 @@ TEST_DATA = yaml(`
   expect:
     hoges:
       name: hoges
-      altname: Hoge
+      altname: null
       columns:
         aaa:
           name: aaa
@@ -207,7 +207,7 @@ TEST_DATA = yaml(`
             refname: "Fuga"
     fugas:
       name: "fugas"
-      altname: Fuga
+      altname: null
       columns:
         ccc:
           name: "ccc"
@@ -242,7 +242,7 @@ TEST_DATA = yaml(`
   expect:
     hoges:
       name: hoges
-      altname: Hoge
+      altname: null
       columns:
         aaa:
           name: aaa
@@ -259,7 +259,7 @@ TEST_DATA = yaml(`
             refname: "Fuga"
     fugas:
       name: "fugas"
-      altname: Fuga
+      altname: null
       columns:
         id:
           name: "id"
@@ -298,7 +298,7 @@ TEST_DATA = yaml(`
   expect:
     hoges:
       name: hoges
-      altname: Hoge
+      altname: null
       columns:
         id:
           name: "id"
@@ -328,7 +328,7 @@ TEST_DATA = yaml(`
   expect:
     hoges:
       name: hoges
-      altname: Hoge
+      altname: null
       columns:
         id:
           name: id
@@ -412,10 +412,12 @@ TEST_DATA = yaml(`
       schemas:
         Hoge:
           type: array
+          x-janame: Hoge
           items:
             $ref: "#/components/schemas/Fuga"
         Fuga:
           type: object
+          x-janame: Fuga
           properties:
             aaa:
               type: string
@@ -765,14 +767,17 @@ TEST_DATA = yaml(`
       schemas:
         RoleList:
           type: array
+          x-janame: RoleList
           items:
             $ref: "#/components/schemas/Role"
         Role:
           type: array
+          x-janame: Role
           items:
             $ref: "#/components/schemas/Perm"
         Perm:
           type: object
+          x-janame: Perm
           properties:
             hoge:
               type: string
