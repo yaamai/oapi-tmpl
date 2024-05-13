@@ -789,9 +789,7 @@ for(let test of TEST_DATA) {
   utils.assert(err, [])
 
   var ctx = new schemas.Context()
-  for(let [name, s] of schemas.iterSchemas(doc)) {
-    schemas.schemaToTable(ctx, name, s)
-  }
+  schemas.schemaToTable(ctx, doc, name)
 
   utils.assert(test.expect, ctx.tables, test.desc)
 }

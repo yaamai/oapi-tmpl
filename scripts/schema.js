@@ -335,7 +335,9 @@ function _isNonNest(t) {
   return ["number", "string", "integer", "boolean"].includes(t)
 }
 
-function schemaToTable(ctx, name, schema) {
+function schemaToTable(ctx, doc, name) {
+  let schemas = doc.Model.Components.Schemas
+  let schema = schemas[name].Schema()
   [schema, type] = reduceAllOf(schema)
   // console.log(name, type)
 
@@ -343,13 +345,20 @@ function schemaToTable(ctx, name, schema) {
   for (let [subName, subSchema] of _get_nested_schemas(schema)) {
     [subSchema, subType] = reduceAllOf(subSchema)
     let subIsRef = subSchema.ParentProxy.IsReference()
+    let subIsNonNest = _isNonNest(subType)
     console.log(name, type, subIsRef, subType, subName)
 
-    if (type == "array" && subIsRef && _isNonNest(subType)) _arrayTable(ctx, name, schema, subName, subSchema, subType)
+    // primitive ref in array => table with aggregate_id column
+    if (type == "array" && subIsRef && subIsNonNest) _arrayTable(ctx, name, schema, subName, subSchema, subType)
+
+    // ref in array => table with aggregate_id column
     else if (type == "array" && subIsRef) _arrayToRef(ctx, name, schema, subSchema)
-    else if (type == "array" && !subIsRef && _isNonNest(subType)) _arrayTable(ctx, name, schema, subName, subSchema, subType)
-    else if (type == "object" && subIsRef && _isNonNest(subType)) _objectToNonNest(ctx, name, schema, subName, subSchema, subType)
-    else if (type == "object" && !subIsRef && _isNonNest(subType)) _objectToNonNest(ctx, name, schema, subName, subSchema, subType)
+
+    // master table
+    else if (type == "array" && !subIsRef && subIsNonNest) _arrayTable(ctx, name, schema, subName, subSchema, subType)
+
+    else if (type == "object" && subIsRef && subIsNonNest) _objectToNonNest(ctx, name, schema, subName, subSchema, subType)
+    else if (type == "object" && !subIsRef && subIsNonNest) _objectToNonNest(ctx, name, schema, subName, subSchema, subType)
     else if (type == "object" && subIsRef) _objectToRef(ctx, name, schema, subName, subSchema, subType)
 
     // if (subIsRef) {
